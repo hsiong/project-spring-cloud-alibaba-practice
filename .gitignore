@@ -1,0 +1,2 @@
+#忽略所有target目录
+**/target/
