@@ -3,9 +3,6 @@
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
 
-# spring-cloud-alibaba-base
-spring cloud alibaba learning
-
 # 第一章 微服务介绍
 ## 1.1 系统架构演变
 单体应用架构--->垂直应用架构--->分布 式架构--->SOA(资源调度和治理中心)架构--->微服务架构--->Service Mesh(服务网格化)  
