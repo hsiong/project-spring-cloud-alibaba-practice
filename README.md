@@ -820,6 +820,5 @@ public class OrderController {
 
 
 5. 重启服务消费方order-shop, 访问[http://localhost:8091/order/prod/4444](http://localhost:8091/order/prod/4444)查看效果  
-
-<b>注意: </b>若重启过程中, 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance", 请优先修改Feign的版本, 使Feign的版本与您的spring-cloud-alibaba版本一致。
+<b>注意: </b>若重启过程中, 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance", 请优先修改Feign的版本, 使Feign的版本与您的spring-cloud-alibaba版本一致。  
 请不要用LoadBalancing替换Ribbon。在一段时间内, 仅支持轮询策略的Loadbalance还不能替代Ribbon。
