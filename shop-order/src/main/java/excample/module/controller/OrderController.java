@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+import java.util.Random;
+
 /**
  * @author JF
  * @version 1.0.0
@@ -37,8 +40,11 @@ public class OrderController {
 
         log.info(">>客户下单，这时候要调用商品微服务查询商品信息");
 
-        // 从nacos中获取服务地址
-        ServiceInstance serviceInstance = discoveryClient.getInstances("service-product").get(0);
+        // 通过负载随机从nacos中获取服务地址
+        List<ServiceInstance> instances = discoveryClient.getInstances("shop-product");
+        int index = new Random().nextInt(instances.size());
+        ServiceInstance serviceInstance = instances.get(index);
+
         String url = serviceInstance.getHost() + ":" + serviceInstance.getPort();
         log.info(">>从nacos中获取到的微服务地址为:" + url);
 
