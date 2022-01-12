@@ -508,6 +508,9 @@ public class OrderController {
 ```
 
 ### 2.4.5 总结
-至此, 我们就完成了项目的基础搭建, 具体源码可以参考base分支
+至此, 我们就完成了项目的基础搭建, 具体源码可以参考base分支。  
+访问[http://localhost:8091/order/prod/12345](http://localhost:8091/order/prod/12345), 可以看到如下界面。  
+
+![image](https://user-images.githubusercontent.com/37357447/149081493-54bc3c49-8e94-4992-9e97-8dbb719b71f5.png)
 
 
