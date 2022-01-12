@@ -4,15 +4,10 @@ import com.alibaba.fastjson.JSON;
 import excample.module.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
-import java.util.Random;
 
 /**
  * @author JF
@@ -30,10 +25,6 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    // DiscoveryClient是专门负责服务注册和发现的，我们可以通过它获取到注册到注册中心的所有服务
-    @Autowired
-    private DiscoveryClient discoveryClient;
-
     //准备买1件商品
     @GetMapping("/order/prod/{pid}")
     public String order(@PathVariable("pid") Integer pid) {
@@ -41,15 +32,10 @@ public class OrderController {
         log.info(">>客户下单，这时候要调用商品微服务查询商品信息");
 
         // 通过负载随机从nacos中获取服务地址
-        List<ServiceInstance> instances = discoveryClient.getInstances("shop-product");
-        int index = new Random().nextInt(instances.size());
-        ServiceInstance serviceInstance = instances.get(index);
-
-        String url = serviceInstance.getHost() + ":" + serviceInstance.getPort();
-        log.info(">>从nacos中获取到的微服务地址为:" + url);
-
+        String url = "shop-product";
 
         // 通过restTemplate调用商品微服务
+        // 由于restTemplate已经集成@LoadBalanced, 那么会自动从注册中心拿到对应的地址
         String product = restTemplate.getForObject("http://" + url + "/product/" + pid, String.class);
         log.info(">>商品信息,查询结果:" + JSON.toJSONString(product));
         orderService.save(product);
