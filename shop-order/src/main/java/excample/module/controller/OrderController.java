@@ -38,7 +38,7 @@ public class OrderController {
         log.info(">>客户下单，这时候要调用商品微服务查询商品信息");
 
         // 从nacos中获取服务地址
-        ServiceInstance serviceInstance = discoveryClient.getInstances("service-product").get(0);
+        ServiceInstance serviceInstance = discoveryClient.getInstances("shop-product").get(0);
         String url = serviceInstance.getHost() + ":" + serviceInstance.getPort();
         log.info(">>从nacos中获取到的微服务地址为:" + url);
 
