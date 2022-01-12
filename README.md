@@ -120,7 +120,7 @@ spring cloud alibaba learning
 |问题|解决思路|解决办法|
 |:-:|:-:|:-:|
 |如何管理他们?|服务治理 注册中心[服务注册 发现 剔除]|nacos|
-|他们之间如何通讯?|restful rpc||
+|他们之间如何通讯?|restful rpc|ribbon+feign|
 |客户端怎么访问他们?|网关||
 |一旦出现问题，应该如何自处理?|服务容错||
 |一旦出现问题，应该如何排错?|链路追踪||
@@ -816,10 +816,10 @@ public class OrderController {
 
 }
 ```  
-我们可以看到, 通过feign我们实现了两个微服务之间类似接口的调用, 而不用再借助restTemplate通过固定的http地址进行访问  
+我们可以看到, 通过feign我们实现了两个微服务之间类似接口的调用, 而不用再借助restTemplate通过固定的http地址进行访问。  
 
 
 5. 重启服务消费方order-shop, 访问[http://localhost:8091/order/prod/4444](http://localhost:8091/order/prod/4444)查看效果  
 
-<b>注意: </b>若重启过程中, 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance", 请优先修改Feign的版本, 使Feign的版本与您的spring-cloud-alibaba版本一致。  
-请不要用LoadBalancing替换Ribbon。在一段时间内, 仅支持轮询策略的Loadbalance还不能替代Ribbon。
+<b>注意: </b>若重启过程中, 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance", 请优先修改feign的版本, 使feign的版本与您的spring-cloud-alibaba版本一致。  
+请不要用loadBalancing替换ribbon。在一段时间内, 仅支持轮询策略的loadbalance还不能替代ribbon。
