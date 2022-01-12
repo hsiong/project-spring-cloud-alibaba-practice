@@ -363,6 +363,7 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 ## 2.4 创建微服务
 ### 2.4.1 创建微服务步骤
  <b style='color:red'>注意: </b>我们认为您已经掌握了创建和部署spring-boot单体应用的能力, 故此只做简要配置说明 
+
 步骤如下:
 1. 创建模块
 2. 创建application.yml文件
@@ -381,9 +382,8 @@ spring:
     url: jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true
     username: root
     password:
-
-```
-3. 创建SpringBoot主类 xxApplication
+```  
+3. 创建SpringBoot主类 xxApplication  
 ```
 @SpringBootApplication
 @Slf4j
@@ -410,8 +410,8 @@ public class xxApplication {
     }
 
 }
-```
-4. 加入配置文件 pom.xml
+```  
+1. 加入配置文件 pom.xml  
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
