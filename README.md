@@ -2,7 +2,7 @@
 
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
-
+- [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
     - [1.1.1 单体应用架构](#111-单体应用架构)
@@ -59,6 +59,10 @@ spring cloud alibaba learning
     - [3.4.2 自定义实现负载均衡](#342-自定义实现负载均衡)
     - [3.4.3 基于Ribbon实现负载均衡](#343-基于ribbon实现负载均衡)
       - [3.4.3.1 集成Ribbon](#3431-集成ribbon)
+      - [3.4.3.2 Ribbon支持的负载均衡策略](#3432-ribbon支持的负载均衡策略)
+  - [3.5 基于Feign实现服务调用](#35-基于feign实现服务调用)
+    - [3.5.1 什么是Feign](#351-什么是feign)
+    - [3.5.2 Feign的使用](#352-feign的使用)
 
 # 第一章 微服务介绍
 ## 1.1 系统架构演变
@@ -575,8 +579,8 @@ public class OrderController {
 1. 安装nacos
     +[github-nacos-release](https://github.com/alibaba/nacos/releases)
 2. 启动nacos
-    + 切换到目录 ```cd /xxx/nacos```
-    + 启动nacos ```sh startup.sh -m standalone ```
+    + 切换到目录```cd /xxx/nacos```
+    + 启动nacos```sh startup.sh -m standalone```
 3. 访问nacos
     + 打开浏览器输入[http://localhost:8848/nacos](http://localhost:8848/nacos)，即可访问服务，默认密码是nacos/nacos
   
@@ -672,30 +676,30 @@ public class OrderController {
     ![image](https://user-images.githubusercontent.com/37357447/149077903-d87324c4-9c45-4b78-bafe-c565d6a2367c.png)
 3. 修改shop-order的代码，实现负载均衡  
     将
-    ```
+```
     // 从nacos中获取服务地址
     ServiceInstance serviceInstance = discoveryClient.getInstances("shop-product").get(0);
-    ```
+```
     改为
-    ```
+```
     // 通过负载随机从nacos中获取服务地址
     List<ServiceInstance> instances = discoveryClient.getInstances("shop-product");
     int index = new Random().nextInt(instances.size());
     ServiceInstance serviceInstance = instances.get(index);
-    ```
+```
 ### 3.4.3 基于Ribbon实现负载均衡
 #### 3.4.3.1 集成Ribbon
 Ribbon是Spring Cloud的一个组件，它可以让我们使用一个注解就能轻松的搞定负载均衡。  
 1. 在服务调用(shop-order)的RestTemplate的生成方法上添加@LoadBalanced注解
-    ```
+```
     @Bean
     @LoadBalanced // 如果RestTemplate上面有这个注解，那么这个RestTemplate调用的远程地址，会走负载均衡器。
     public RestTemplate restTemplate() {
     return new RestTemplate();
     }
-    ```
+```
 2. 修改服务调用的方法OrderController
-   ```
+```
     @RestController
     @Slf4j
     public class OrderController {
@@ -722,10 +726,8 @@ Ribbon是Spring Cloud的一个组件，它可以让我们使用一个注解就�
             orderService.save(product);
             return product;
         }
-
-
     }
-    ```
+``` 
 
 #### 3.4.3.2 Ribbon支持的负载均衡策略
 Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为com.netflix.loadbalancer.IRule，具体的负载策略如下图所示:
