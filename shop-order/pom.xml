@@ -17,14 +17,6 @@
             <artifactId>shop-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
-        <!-- feign 版本与spring-alibaba.version一致 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <version>${spring-alibaba.version}</version>
-        </dependency>
-
     </dependencies>
 
 </project>
