@@ -1,6 +1,7 @@
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
 
+- [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
     - [1.1.1 单体应用架构](#111-单体应用架构)
@@ -61,6 +62,23 @@ spring cloud alibaba learning
   - [3.5 基于Feign实现服务调用](#35-基于feign实现服务调用)
     - [3.5.1 什么是Feign](#351-什么是feign)
     - [3.5.2 Feign的使用](#352-feign的使用)
+- [第四章 Sentinel--服务容错](#第四章-sentinel--服务容错)
+  - [4.1 高并发带来的问题](#41-高并发带来的问题)
+  - [4.2 服务雪崩效应](#42-服务雪崩效应)
+  - [4.3 常见服务容错方案](#43-常见服务容错方案)
+    - [4.3.1 常见的容错思路](#431-常见的容错思路)
+    - [4.3.2 常见的容错组件](#432-常见的容错组件)
+  - [4.4 Sentinel入门](#44-sentinel入门)
+    - [4.4.1 什么是Sentinel](#441-什么是sentinel)
+    - [4.4.2 微服务集成Sentinel](#442-微服务集成sentinel)
+  - [4.5 Sentinel的概念和功能](#45-sentinel的概念和功能)
+    - [4.5.1 基本概念](#451-基本概念)
+    - [4.5.2 重要功能](#452-重要功能)
+  - [4.6 规则](#46-规则)
+    - [4.6.1 流控规则](#461-流控规则)
+      - [4.6.1.1 流控模式-直接](#4611-流控模式-直接)
+      - [4.6.1.2 流控模式-关联](#4612-流控模式-关联)
+      - [4.6.1.3 流控模式-链路](#4613-流控模式-链路)
 
 # 第一章 微服务介绍
 ## 1.1 系统架构演变
@@ -100,7 +118,7 @@ spring cloud alibaba learning
 + 优点:
     + 使用注册中心解决了服务间调用关系的自动调节
 + 缺点:
-    + 服务间会有依赖关系，一旦某个环节出错会影响较大(服务雪崩)(因为所有服务都部署在同一个服务层上, 并且具有上下游关系)
+    + 服务间会有依赖关系，一旦某个环节出错会影响较大(服务雪崩)(因为所有服务都部署在同一个服务层上， 并且具有上下游关系)
     + 服务关心复杂，运维、测试部署困难
 
 ### 1.1.5 微服务架构
@@ -111,11 +129,11 @@ spring cloud alibaba learning
 + 优点：
     + 服务原子化拆分，独立打包、部署和升级，保证每个微服务清晰的任务划分，利于扩展微服务之间采用Restful等轻量级http协议相互调用
 + 缺点：
-    + 分布式系统开发的技术成本高（容错、分布式事务等）
+    + 分布式系统开发的技术成本高(容错、分布式事务等)
 
 ## 1.2 微服务架构介绍
 ### 1.2.1 引入
-在微服务化后, 伴随<b style='color:red'>服务划分粒度</b>越来越细, 我们也由原先的单体应用, 逐步转变成了多个微服务构成的服务集群, 那么, 势必会出现以下问题, 以及目前主流的解决思路。
+在微服务化后， 伴随<b style='color:red'>服务划分粒度</b>越来越细， 我们也由原先的单体应用， 逐步转变成了多个微服务构成的服务集群， 那么， 势必会出现以下问题， 以及目前主流的解决思路。
 
 |问题|解决思路|解决办法|
 |:-:|:-:|:-:|
@@ -138,7 +156,7 @@ spring cloud alibaba learning
 ![image](https://user-images.githubusercontent.com/37357447/148913750-13ef5a3a-bfaa-4dd3-b824-e39b49f16276.png)
 
 #### 1.2.2.2 服务调用
-在微服务架构中，通常存在多个服务之间的远程调用的需求。目前主流的远程调用技术有基于HTTP的<b style='color:red'>RESTFUL接口</b>以及基于TCP的<b style='color:red'>RPC协议</b>。一般来说, RESTFUL接口即可满足我们大多数开发需求, 配置和适用上也更方便、灵活。
+在微服务架构中，通常存在多个服务之间的远程调用的需求。目前主流的远程调用技术有基于HTTP的<b style='color:red'>RESTFUL接口</b>以及基于TCP的<b style='color:red'>RPC协议</b>。一般来说， RESTFUL接口即可满足我们大多数开发需求， 配置和适用上也更方便、灵活。
 + REST(Representational State Transfer)  
 这是一种HTTP调用的格式，更标准，更通用，无论哪种语言都支持http协议
 + RPC(Remote Promote Call)  
@@ -147,18 +165,18 @@ RPC框架负责屏蔽底层的传输方式、序列化方式和通信细节。�
 
 |比较项|RESTFUL|RPC|
 |:-:|:-:|:-:|
-|通讯协议|HTTP|常用TCP, 亦支持UDP HTTP|
+|通讯协议|HTTP|常用TCP， 亦支持UDP HTTP|
 |性能|较低|较高|
 |灵活度|高|低|
 |应用|微服务|SOA|
 
 #### 1.2.2.3 服务网关
-随着微服务的不断增多，不同的微服务一般会有不同的网络地址，而外部客户端可能需要调用多个服务的接口才能完成一个业务需求, 如果让客户端直接与各个微服务通信可能出现：
+随着微服务的不断增多，不同的微服务一般会有不同的网络地址，而外部客户端可能需要调用多个服务的接口才能完成一个业务需求， 如果让客户端直接与各个微服务通信可能出现：
 + 客户端需要调用不同的url地址，增加难度
 + 在一定的场景下，存在跨域请求的问题                                    
 + 每个微服务都需要进行单独的身份认证  
 
-为了解决这些问题, 我们引入了<b style='color:red'>API网关</b>。  
+为了解决这些问题， 我们引入了<b style='color:red'>API网关</b>。  
 API网关是将所有API调用统一接入到API网关层，由网关层统一接入和输出。有了网关之后，各个API服务提供团队可以专注于自己的的业务逻辑处理，而API网关更专注于安全、流量、路由等问题。  
 一个API网关的基本功能包括：
 + 统一接入
@@ -198,7 +216,7 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 + <b style='color:red'>分布式配置管理</b> ：支持分布式系统中的外部化配置，配置更改时自动刷新。  
 + <b style='color:red'>消息驱动能力</b> ：基于 Spring Cloud Stream 为微服务应用构建消息驱动能力。  
 + <b style='color:red'>分布式事务</b> ：使用 @GlobalTransactional 注解，   高效并且对业务零侵入地解决分布式事务问题。  
-+ <b style='color:red'>分布式任务调度</b>：提供秒级、精准、高可靠、高可用的定时（基于 Cron 表达式）任务调度服务。 同时提供分布式的任务执行模型，如网格任务。网格任务支持海量子任务均匀分配到所有 Worker（schedulerx-client）上执行。  
++ <b style='color:red'>分布式任务调度</b>：提供秒级、精准、高可靠、高可用的定时(基于 Cron 表达式)任务调度服务。 同时提供分布式的任务执行模型，如网格任务。网格任务支持海量子任务均匀分配到所有 Worker(schedulerx-client)上执行。  
 + 阿里云对象存储：阿里云提供的海量、安全、低成本、高可靠的云存储服务。支持在任何应用、任 何时间、任何地点存储和访问任意类型的数据。  
 + 阿里云短信服务：覆盖全球的短信服务，友好、高效、智能的互联化通讯能力，帮助企业迅速搭建客户触达通道。
 
@@ -209,12 +227,12 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 + <b style='color:red'>Seata</b>：阿里巴巴开源产品，一个易于使用的高性能微服务分布式事务解决方案。
 + <b style='color:red'>RocketMQ</b>：一款开源的分布式消息系统，基于高可用分布式集群技术，提供低延时的、高可靠的消息发布与订阅服务。
 + <b style='color:red'>Alibaba Cloud ACM</b>：一款在分布式架构环境中对应用配置进行集中管理和推送的应用配置中心产品。
-+ <b style='color:red'>Alibaba Cloud SchedulerX</b>: 阿里中间件团队开发的一款分布式任务调度产品，提供秒级、精准、高可靠、高可用的定时（基于 Cron 表达式）任务调度服务。
-+ Alibaba Cloud OSS: 阿里云对象存储服务（Object Storage Service，简称 OSS），是阿里云提供的海量、安全、低成本、高可靠的云存储服务。您可以在任何应用、任何时间、任何地点存储和 访问任意类型的数据。
++ <b style='color:red'>Alibaba Cloud SchedulerX</b>: 阿里中间件团队开发的一款分布式任务调度产品，提供秒级、精准、高可靠、高可用的定时(基于 Cron 表达式)任务调度服务。
++ Alibaba Cloud OSS: 阿里云对象存储服务(Object Storage Service，简称 OSS)，是阿里云提供的海量、安全、低成本、高可靠的云存储服务。您可以在任何应用、任何时间、任何地点存储和 访问任意类型的数据。
 + Alibaba Cloud SMS: 覆盖全球的短信服务，友好、高效、智能的互联化通讯能力，帮助企业迅速搭建客户触达通道。
 
 # 第二章 微服务环境搭建
-以电商项目中的商品、订单、用户为例, 进行学习。
+以电商项目中的商品、订单、用户为例， 进行学习。
 ## 2.1 案例准备
 ### 2.1.1 技术选型
 
@@ -225,14 +243,15 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 |maven|3.6.3|
 |spring|2.3.12.RELEASE|
 |spring-cloud|Hoxton.SR12|
-|spring-cloud-feign|Hoxton.SR12|
 |spring-cloud-alibaba|2.2.7.RELEASE|
+|feign|2.2.7.RELEASE|
 |nacos|2.0.3|
-|fastjson|1.2.56|
-|lombok|1.18.20|
-|MySQL|5.7(任意版本都可以)|
+|sentinel|1.8.1|
+|fastjson|任意版本|
+|lombok|任意版本|
+|MySQL|5.7(任意版本， 8.0以上需要修改配置)|
 
- <b style='color:red'>注意: </b>若未满足版本对应关系, 将会出现各种问题 [spring cloud alibaba 版本对应](https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E)  
+ <b style='color:red'>注意: </b>若未满足版本对应关系， 将会出现各种问题 [spring cloud alibaba 版本对应](https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E)  
         
 ### 2.1.2 模块设计
 + spring-cloud-alibaba-base 父工程    
@@ -249,7 +268,7 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 ![image](https://user-images.githubusercontent.com/37357447/148930992-aec96c32-f60f-4e7b-81d0-ab7791ed9559.png)
 
 ## 2.2 创建父工程
-创建一个maven工程, 名字为spring-cloud-alibaba-base，pom.xml如下
+创建一个maven工程， 名字为spring-cloud-alibaba-base，pom.xml如下
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -290,7 +309,7 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
     </properties>
     <dependencies>
 
-<!--        &lt;!&ndash; 本地maven配置问题, parent不会下载, 故引入后下载包后注释 &ndash;&gt;
+<!--        &lt;!&ndash; 本地maven配置问题， parent不会下载， 故引入后下载包后注释 &ndash;&gt;
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-parent</artifactId>
@@ -364,7 +383,7 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 
 ## 2.4 创建微服务
 ### 2.4.1 创建微服务步骤
- <b style='color:red'>注意: </b>我们认为您已经掌握了创建和部署spring-boot单体应用的能力, 故此只做简要配置说明 
+ <b style='color:red'>注意: </b>我们认为您已经掌握了创建和部署spring-boot单体应用的能力， 故此只做简要配置说明 
 
 步骤如下:
 1. 创建模块
@@ -392,7 +411,7 @@ spring:
 public class xxApplication {
 
     public static void main(String[] args) throws UnknownHostException {
-        ConfigurableApplicationContext application = SpringApplication.run(xxApplication.class, args);
+        ConfigurableApplicationContext application = SpringApplication.run(xxApplication.class， args);
 
         Environment env = application.getEnvironment();
         String ip = InetAddress.getLocalHost().getHostName();
@@ -518,8 +537,8 @@ public class OrderController {
     public String order(@PathVariable("pid") Integer pid) {
         log.info(">>客户下单，这时候要调用商品微服务查询商品信息");
         //通过restTemplate调用商品微服务
-        String product = restTemplate.getForObject( "http://localhost:8081/product/" + pid, String.class);
-        log.info(">>商品信息,查询结果:" + JSON.toJSONString(product));
+        String product = restTemplate.getForObject( "http://localhost:8081/product/" + pid， String.class);
+        log.info(">>商品信息，查询结果:" + JSON.toJSONString(product));
         orderService.save(product);
         return product;
     }
@@ -527,8 +546,8 @@ public class OrderController {
 ```
 
 ### 2.4.5 总结
-至此, 我们就完成了项目的基础搭建, 具体源码可以参考base分支。  
-访问[http://localhost:8091/order/prod/12345](http://localhost:8091/order/prod/12345), 可以看到如下界面。  
+至此， 我们就完成了项目的基础搭建， 具体源码可以参考base分支。  
+访问[http://localhost:8091/order/prod/12345](http://localhost:8091/order/prod/12345)， 可以看到如下界面。  
 
 ![image](https://user-images.githubusercontent.com/37357447/149081493-54bc3c49-8e94-4992-9e97-8dbb719b71f5.png)
 
@@ -581,6 +600,19 @@ public class OrderController {
     + 启动nacos```sh startup.sh -m standalone```
 3. 访问nacos
     + 打开浏览器输入[http://localhost:8848/nacos](http://localhost:8848/nacos)，即可访问服务，默认密码是nacos/nacos
+4. 我们在这里编写了一个简单的脚本，方便以后的nacos启动  
+打开终端，输入以下命令  
+<b>注意: </b>将'Desktop'换成您的实际位置，'您的目录'换成您的nacos的实际目录， 以后使用`sh nacos-start.sh`命令即可快速启动nacos
+```
+cd ~/Desktop/
+touch nacos-start.sh;
+chmod -R 755 nacos-start.sh;  
+echo '#!/bin/bash' >> nacos-start.sh;
+echo 'cd 您的目录/nacos/bin' >> nacos-start.sh;
+echo 'startup.sh -m standalone' >> nacos-start.sh;
+echo 'echo 'nacos http://127.0.0.1:8848/nacos'' >> nacos-start.sh;
+```
+
   
 ### 3.3.2 服务注册与发现
 我们在第二章的基础上，将nacos融入我们的微服务中
@@ -742,7 +774,7 @@ Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为co
 |RandomRule|随机规则: 随机选择一个server|随机选择一个数作为index，选择index对应位置的server|
 |ZoneAvoidanceRule|Ribbon默认规则: 先使用主过滤条件(区域负载器，选择最优区域)对所有实例过滤并返回过滤后的实例清单，依次使用次过滤条件列表中的过滤条件对主过滤条件的结果进行过滤，判断最小过滤数(默认1)和最小过滤百分比(默认0)，最后对满足条件的服务器则使用RoundRobinRule(轮询方式)选择一个服务器实例|[RIBBON过滤器ZONEAVOIDANCERULE源码解读](https://www.freesion.com/article/5359151961/)|
 
-使用方式: 除了ZoneAvoidanceRule外, 用以下方式将负载均衡策略注册到spring容器即可。  
+使用方式: 除了ZoneAvoidanceRule外， 用以下方式将负载均衡策略注册到spring容器即可。  
 ```
     /**
      * 设置Ribbon的策略
@@ -761,7 +793,7 @@ Feign是Spring Cloud提供的一个声明式的伪Http客户端，它使得调�
 Nacos很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使用Fegin默认就实现了负
 载均衡的效果。
 ### 3.5.2 Feign的使用
-1. 在服务消费方shop-order加入feign的依赖
+1. 在父模块xx-alibaba-base加入feign的依赖
 ```
         <!-- feign 版本与spring-alibaba.version一致 -->
         <dependency>
@@ -770,6 +802,8 @@ Nacos很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使
             <version>${spring-alibaba.version}</version>
         </dependency>
 ```  
+<b>注意：</b>若将feign的依赖单独放在微服务模块中，项目启动时会报 `NoSuchMethodError: com.google.common.collect.Sets$SetView.iterator()Lcom/google/common/collect/UnmodifiableIterator` 异常，猜测是因为feign依赖了ribbon导致
+
 2. 在shop-order启动类上加入@EnableFeignClients注解  
 ```
 @SpringBootApplication
@@ -778,7 +812,7 @@ Nacos很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使
 @Slf4j
 public class OrderApplication {
 ```  
-3. 创建ProductService, 通过feign调用商品微服务  
+3. 创建ProductService， 通过feign调用商品微服务  
 ```
 @FeignClient("shop-product") // 声明服务提供者的name
 public interface ProductService {
@@ -808,7 +842,7 @@ public class OrderController {
 
         // 通过feign调用
         String product = productService.product(pid);
-        log.info(">>商品信息,查询结果:" + JSON.toJSONString(product));
+        log.info(">>商品信息，查询结果:" + JSON.toJSONString(product));
         orderService.save(product);
         return product;
     }
@@ -816,10 +850,235 @@ public class OrderController {
 
 }
 ```  
-我们可以看到, 通过feign我们实现了两个微服务之间类似接口的调用, 而不用再借助restTemplate通过固定的http地址进行访问。  
+我们可以看到， 通过feign我们实现了两个微服务之间类似接口的调用， 而不用再借助restTemplate通过固定的http地址进行访问。  
 
 
-5. 重启服务消费方order-shop, 访问[http://localhost:8091/order/prod/4444](http://localhost:8091/order/prod/4444)查看效果  
+5. 重启服务消费方order-shop， 访问[http://localhost:8091/order/prod/4444](http://localhost:8091/order/prod/4444)查看效果  
 
-<b>注意: </b>若重启过程中, 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance", 请优先修改feign的版本, 使feign的版本与您的spring-cloud-alibaba版本一致。  
-请不要用loadBalancing替换ribbon。在一段时间内, 仅支持轮询策略的loadbalance还不能替代ribbon。
+<b>注意: </b>  
+1. 若重启过程中， 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance"， 请优先修改feign的版本， 使feign的版本与您的spring-cloud-alibaba版本一致。  
+请不要用loadBalancing替换ribbon。在一段时间内， 仅支持轮询策略的loadbalance还不能替代ribbon。
+2. 
+
+# 第四章 Sentinel--服务容错
+## 4.1 高并发带来的问题
+在微服务架构中，我们将业务拆分成一个个的服务，服务与服务之间可以相互调用，但是由于网络原因或者自身的原因，服务并不能保证服务的100%可用，如果单个服务出现问题，调用这个服务就会出现网络延迟，此时若有大量的网络涌入，会形成任务堆积，最终导致服务瘫痪。  
+接下来，我们来模拟一个高并发的场景: 
+1. 改造OrderController
+```
+@RestController
+@Slf4j
+public class OrderController {
+
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private OrderService orderService;
+
+    //准备买1件商品
+    @GetMapping("/order/prod/{pid}")
+    public String order(@PathVariable("pid") String pid) {
+
+        log.info(">>客户下单，这时候要调用商品微服务查询商品信息");
+
+        // 通过feign调用
+        String product = productService.product(pid);
+        log.info(">>商品信息，查询结果:" + JSON.toJSONString(product));
+        orderService.save(product);
+
+        //模拟一次网络延时
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return product;
+    }
+
+}
+```
+2. 修改配置文件中tomcat的并发数
+```
+server:
+  port: 8091
+  tomcat:
+    threads:
+      max: 10 #tomcat的最大并发值修改为10，默认是200
+```
+3. 使用jmeter进行压力测试  
+[Jmeter下载地址](https://jmeter.apache.org/download_jmeter.cgi)  
+[Jmeter性能测试的基本操作](https://www.cnblogs.com/color-cc/p/13585144.html)  
+    1. 设置线程并发数
+![image](https://user-images.githubusercontent.com/37357447/149298447-0a20d5b6-8d81-455f-afa2-ec3fa13f171d.png)
+    2. 运行，打开结果树，观察结果
+![image](https://user-images.githubusercontent.com/37357447/149298759-98c3c119-2cf1-4ae6-ab8a-38dd8d84dceb.png)
+
+此时会发现， 由于order方法囤积了大量请求， 导致ｍessage方法的访问出现了问题，这就是服务雪崩的雏形。
+
+## 4.2 服务雪崩效应
+在分布式系统中，由于网络原因或自身的原因，服务一般无法保证100%可用。如果一个服务出现了问题，调用这个服务就会出现线程阻塞的情况，此时若有大量的请求涌入，就会出现多条线程阻塞等待，进而导致服务瘫痪。  
+由于服务与服务之间的依赖性，故障会传播，会对整个微服务系统造成灾难性的严重后果，这就是服务故障的 “雪崩效应”。  
+雪崩发生的原因多种多样，有不合理的容量设计，或者是高并发下某一个方法响应变慢，亦或是某台机器的资源耗尽。我们无法完全杜绝雪崩源头的发生，故此，必须做好足够的<b>服务容错</b>，保证在一个服务发生问题，不会影响到其它服务的正常运行。  
+
+![image](https://user-images.githubusercontent.com/37357447/149300154-a1a80124-593f-4cf7-9d58-b2d44130cf18.png)
+
+## 4.3 常见服务容错方案
+### 4.3.1 常见的容错思路
+常见的容错思路有隔离、超时、限流、熔断、降级这几种，下面分别介绍一下
++ <b>隔离</b>  
+它是指将系统按照一定的原则划分为若干个服务模块，各个模块之间相对独立，无强依赖。当有故障发生时，能将问题和影响隔离在某个模块内部，而不扩散风险，不波及其它模块，不影响整体的系统服务。常见的隔离方式有：<u>线程池隔离</u>和<u>信号量隔离</u>。  
+![image](https://user-images.githubusercontent.com/37357447/149301353-b7032ee5-2e35-40c5-9741-c6927efed0ba.png)    
++ <b>超时</b>  
+在上游服务调用下游服务的时候，设置一个最大响应时间，<u>如果超过这个时间</u>，下游未作出反应，就<u>断开请求</u>，释放掉线程。
++ <b>限流</b>  
+限流就是限制系统的输入和输出流量已达到保护系统的目的。为了保证系统的稳固运行,一旦达到的需要限制的阈值,就需要限制流量并采取少量措施以完成<u>限制流量</u>的目的。
++ <b>熔断</b>  
+在互联网系统中，当下游服务响应变慢或失败，上游服务为了保护系统整体的可用性，可以暂时切断对下游服务的调用。这种牺牲局部，保全整体的措施就叫做熔断。  
+![image](https://user-images.githubusercontent.com/37357447/149302314-85a245e4-47ac-4375-909e-11c83f494e23.png)  
+服务熔断一般有三种状态：
+    + 熔断关闭状态(Closed)  
+服务没有故障时，熔断器所处的状态，对调用方的调用不做任何限制
+    + 熔断开启状态(Open)  
+后续对该服务接口的调用不再经过网络，直接执行本地的fallback方法
+    + 半熔断状态(Half-Open)  
+尝试恢复服务调用，允许有限的流量调用该服务，并监控调用成功率。如果成功率达到预期，则说明服务已恢复，进入熔断关闭状态；如果成功率仍旧很低，则重新进入熔断关闭状态。
++ <b>降级</b>  
+降级其实就是为服务提供一个备用方案，一旦服务无法正常调用，就使用备用方案。  
+![image](https://user-images.githubusercontent.com/37357447/149303212-9dcd0961-cffd-4445-9d5d-365c99bf269b.png)
+### 4.3.2 常见的容错组件
+|比较项|Sentinel|Hystrix|resilience4j|
+|:-:|:-:|:-:|:-:|
+|隔离策略|信号量隔离(并发线程数限流)|线程池隔离/信号量隔离|信号量隔离|
+|熔断降级策略|基于响应时间、异常比率、异常数|基于异常比率|基于异常比率、响应时间|
+|实时统计实现|滑动窗口(LeapArray)|滑动窗口(基于RxJava)|Ring Bit Buffer|
+|动态规则配置|支持多种数据源|支持多种数据源|支持少|
+|扩展性|丰富|丰富|仅支持接口形式扩展|
+|限流|基于QPS，支持基于调用关系的限流|支持少|Rate Limiter|
+|流量整形|支持预热模式、匀速器模式、预热排队模式|X|简单的Rate Limiter模式|
+|系统自适应保护|√|X|X|
+|控制台|开箱即用的控制台，可配置规则、查看秒级监控、机器发现等|简单的监控查看|不提供控制台，可对接其它监控系统|
+
+## 4.4 Sentinel入门
+### 4.4.1 什么是Sentinel 
+1. Sentinel(分布式系统的流量防卫兵)是阿里开源的一套用于服务容错的综合性解决方案。它以流量为切入点, 从流量控制、熔断降级、系统负载保护等多个维度来保护服务的稳定性。  
+2. Sentinel 具有以下特征:
+    + 丰富的应用场景：承接了阿里巴巴近10年的双十一大促流量的核心场景, 例如秒杀(即突发流量控制在系统容量可以承受的范围)、消息削峰填谷、集群流量控制、实时熔断下游不可用应用等
+    + 完备的实时监控：提供了实时的监控功能。通过控制台可以看到接入应用的单台机器秒级数据, 甚至500台以下规模的集群的汇总运行情况
+    + 广泛的开源生态：提供开箱即用的与其它开源框架/库的整合模块, 例如与Spring Cloud、Dubbo、gRPC的整合。只需要引入相应的依赖并进行简单的配置即可快速地接入Sentinel
+    + 完善的SPI扩展点：提供简单易用、完善的SPI扩展接口。您可以通过实现扩展接口来快速地定制逻辑。例如定制规则管理、适配动态数据源等
+3. Sentinel 分为两个部分:  
+    + 核心库(Java 客户端)：不依赖任何框架/库,能够运行于所有Java运行时环境，同时对Dubbo/Spring Cloud等框架也有较好的支持
+    + 控制台(Dashboard)：基于Spring Boot开发，打包后可以直接运行，不需要额外的Tomcat等应用容器
+
+### 4.4.2 微服务集成Sentinel
+
+1. 在父模块alibaba-base的pom.xml中加入依赖
+```
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>${spring-alibaba.version}</version>
+        </dependency>
+```
+
+2. 新增OrderSentinalController
+```
+@RestController
+public class OrderSentinalController {
+
+    @GetMapping("/sentinal/message")
+    public String message() {
+        return "1";
+    }
+
+    @GetMapping("/sentinal/message2")
+    public String message2() {
+        return "2";
+    }
+}
+```
+
+3. 安装Sentinel控制台
+[下载jar包, 版本使用v1.8.1](https://github.com/alibaba/Sentinel/releases)
+
+4. 类似nacos，这里我们依然选择用脚本来启动Sentinel
+打开终端，输入以下命令  
+<b>注意: </b>将'Desktop'换成您的实际位置，'您的目录'换成您的Sentinel的实际目录， 以后使用`sh sentinel-start.sh`命令即可快速启动Sentinel, 为了避免端口冲突，我们将sentinel的端口设为8060
+```
+cd ~/Desktop/
+touch sentinel-start.sh;
+chmod -R 755 sentinel-start.sh;  
+echo '#!/bin/bash' >> sentinel-start.sh;
+echo 'cd 您的目录' >> sentinel-start.sh;
+echo 'java -Dserver.port=8060 -Dcsp.sentinel.dashboard.server=localhost:8060 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard-1.8.1.jar' >> sentinel-start.sh;
+echo 'echo 'sentinel http://127.0.0.1:8060'' >> Sentinel-start.sh;
+```
+
+5. 修改shop-order的application.yml
+```
+spring:
+  application:
+    name: shop-order
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    sentinel:
+      transport:
+        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+        dashboard: localhost:8060 # 指定控制台服务的地址
+```
+
+6. 启动shop-order, 访问localhost:8060进入Sentinel控制台(默认用户名密码是sentinel/sentinel)  
+<b>补充：</b>Sentinel的控制台其实就是一个SpringBoot编写的程序。我们需要将我们的微服务程序注册到控制台上,即在微服务中指定控制台的地址, 并且还要开启一个跟控制台传递数据的端口(这里我们使用8061), 控制台也可以通过此端口调用微服务中的监控程序获取微服务的各种信息。
+ 
+ ## 4.5 Sentinel的概念和功能
+ ### 4.5.1 基本概念
++ 资源  
+资源就是Sentinel要保护的东西。它可以是Java应用程序中的任何内容，可以是一个服务(接口)，也可以是一个方法，甚至可以是一段代码。
++ 规则  
+规则就是用来定义如何进行保护资源的，作用在资源之上, 定义以什么样的方式保护资源，主要包括流量控制规则、熔断降级规则以及系统保护规则。
+
+### 4.5.2 重要功能
+ 1. 流量控制(包括隔离、限流、超时、流量整形等等)  
+   流量控制用于调整网络包的数据。任意时间到来的请求往往是随机不可控的，而系统的处理能力是有限的。我们需要根据系统的处理能力对流量进行控制。Sentinel作为一个调配器，可以根据需要把随机的请求调整成合适的形状。
+ 2. 熔断/降级
+   当检测到调用链路中某个资源出现不稳定的表现，例如请求响应时间长或异常比例升高的时候，则对这个资源的调用进行限制，让请求快速失败，避免影响到其它的资源而导致级联故障。  
+    Sentinel 对这个问题采取了两种手段:  
+    + 通过并发线程数进行限制  
+    Sentinel通过限制资源并发线程的数量，来减少不稳定资源对其它资源的影响。当某个资源出现不稳定的情况下，例如响应时间变长，对资源的直接影响就是会造成线程数的逐步堆积。当线程数在特定资源上堆积到一定的数量之后，对该资源的新请求就会被拒绝。堆积的线程完成任务后才开始继续接收请求。
+    + 通过响应时间对资源进行降级  
+	除了对并发线程数进行控制以外，Sentinel还可以通过响应时间来快速降级不稳定的资源。当依赖的资源出现响应时间过长后，所有对该资源的访问都会被直接拒绝，直到过了指定的时间窗口之后才重新恢复。
+ 3. 系统负载保护
+   Sentinel同时提供系统维度的自适应保护能力。当系统负载较高的时候，如果还持续让请求进入可能会导致系统崩溃无法响应。在集群环境下，会把本应这台机器承载的流量转发到其它的机器上去。如果这个时候其它的机器也处在一个边缘状态的时候，Sentinel提供了对应的保护机制，让系统的入口流量和系统的负载达到一个平衡，保证系统在能力范围之内处理最多的请求。
+ 4. 实时统计实现等
+
+总之，我们需要做的事情，就是在Sentinel的资源上配置各种各样的规则，来实现各种容错的功能。
+
+## 4.6 规则
+### 4.6.1 流控规则
+流量控制，其原理是监控应用流量的QPS(每秒查询率)或并发线程数等指标，当达到指定的阈值时对流量进行控制，以避免被瞬时的流量高峰冲垮，从而保障应用的高可用性。  
+点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下           
+![image](https://user-images.githubusercontent.com/37357447/149312642-cb3fb7ee-f212-44dd-87bf-615b9fa5b0a2.png)
++ 资源名：需要限制的请求路径、方法等等
++ 针对来源：指定对哪个微服务进行限流，指default，意思是不区分来源，全部限制  
+阈值类型/单机阈值：
+    + QPS(每秒请求数量)：当调用该接口的QPS达到阈值的时候，进行限流
+    + 线程数：当调用该接口的线程数达到阈值的时候，进行限流
++ 是否集群：暂不需要集群
++ 流控模式：sentinel共有三种流控模式，分别是：
+   + 直接(默认)：接口达到限流条件时，开启限流
+   + 关联：当关联的资源达到限流条件时，开启限流[当接口A达到限流阈值时, 接口B也限流]  
+   + 链路：面向service层用@SentinelResource("xxx")标记的资源，当从某个接口过来的资源达到限流条件时，开启限流(一般来说，该配置不常用)
+  
+下面，我们来演示各个流控模式的区别，资料参考  
+[sentinel流控设置--关联限流](https://blog.csdn.net/qq_41813208/article/details/107003787)  
+[Sentinel限流规则-流控模式之链路模式](https://www.cnblogs.com/linjiqin/p/15369091.html)  
+
+#### 4.6.1.1 流控模式-直接
+
+#### 4.6.1.2 流控模式-关联
+
+#### 4.6.1.3 流控模式-链路
