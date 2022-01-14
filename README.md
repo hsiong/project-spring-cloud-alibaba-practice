@@ -2,6 +2,7 @@
 spring cloud alibaba learning
 
 - [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
+- [序言](#序言)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
     - [1.1.1 单体应用架构](#111-单体应用架构)
@@ -45,12 +46,12 @@ spring cloud alibaba learning
 - [第三章 Nacos Discovery--服务治理](#第三章-nacos-discovery--服务治理)
   - [3.1 服务治理介绍](#31-服务治理介绍)
     - [3.2 常见的注册中心](#32-常见的注册中心)
-  - [3.3 nacos实战](#33-nacos实战)
-    - [3.3.1 本地搭建nacos环境](#331-本地搭建nacos环境)
+  - [3.3 Nacos实战](#33-nacos实战)
+    - [3.3.1 本地搭建Nacos环境](#331-本地搭建nacos环境)
     - [3.3.2 服务注册与发现](#332-服务注册与发现)
-      - [3.3.2.1 添加nacos的依赖](#3321-添加nacos的依赖)
-      - [3.3.2.2 将各微服务注册到nacos](#3322-将各微服务注册到nacos)
-      - [3.3.2.3 在spring-boot中配置nacos的地址](#3323-在spring-boot中配置nacos的地址)
+      - [3.3.2.1 添加Nacos的依赖](#3321-添加nacos的依赖)
+      - [3.3.2.2 将各微服务注册到Nacos](#3322-将各微服务注册到nacos)
+      - [3.3.2.3 在spring-boot中配置Nacos的地址](#3323-在spring-boot中配置nacos的地址)
     - [3.3.2.4 修改微服务调用](#3324-修改微服务调用)
     - [3.3.2.5 启动](#3325-启动)
   - [3.4 实现服务调用的负载均衡](#34-实现服务调用的负载均衡)
@@ -81,6 +82,19 @@ spring cloud alibaba learning
       - [4.6.1.3 @SentinelResource注解实战](#4613-sentinelresource注解实战)
       - [4.6.1.4 流控模式-关联](#4614-流控模式-关联)
       - [4.6.1.5 流控模式-链路](#4615-流控模式-链路)
+
+# 序言
+在文章开头, 我们总结一下spring cloud alibaba各组件的功能, 给您一个大致的思路和便于您日后的复习。  
+也许这些概念和组件您目前还不能理解, 不过没关系, 随着我们学习的深入, 您会慢慢理解引入这些概念的意义和这些组件的功能。
+|组件|功能|
+|:-:|:-:|
+|Spring Cloud Alibaba|阿里提供的微服务开发的一站式解决方案|
+|Nacos|服务注册中心|
+|Ribbon|客户端负载均衡|
+|Feign|REST API 客户端|
+|Sentinel|服务容错|
+|||
+|||
 
 # 第一章 微服务介绍
 ## 1.1 系统架构演变
@@ -137,14 +151,14 @@ spring cloud alibaba learning
 ### 1.2.1 引入
 在微服务化后， 伴随<b style='color:red'>服务划分粒度</b>越来越细， 我们也由原先的单体应用， 逐步转变成了多个微服务构成的服务集群， 那么， 势必会出现以下问题， 以及目前主流的解决思路。
 
-|问题|解决思路|解决办法|
-|:-:|:-:|:-:|
-|如何管理他们?|服务治理 注册中心[服务注册 发现 剔除]|nacos|
-|他们之间如何通讯?|restful rpc|ribbon+feign|
-|客户端怎么访问他们?|网关||
-|一旦出现问题，应该如何自处理?|服务容错||
-|一旦出现问题，应该如何排错?|链路追踪||
-|伴随新的架构体系，应如何架构设计?|事务驱动 领域驱动||  
+|问题|解决思路|
+|:-:|:-:|
+|如何管理他们?|服务治理 注册中心[服务注册 发现 剔除]|
+|他们之间如何通讯?|restful rpc|
+|客户端怎么访问他们?|网关|
+|一旦出现问题，应该如何自处理?|服务容错|
+|一旦出现问题，应该如何排错?|链路追踪|
+|伴随新的架构体系，应如何架构设计?|事务驱动 领域驱动|
 
 ![image](https://user-images.githubusercontent.com/37357447/148911880-67edd711-a1cb-4a5d-b8e9-546038b48fa0.png)
 
@@ -593,8 +607,8 @@ public class OrderController {
 + Nacos  
   Nacos是一个更易于构建云原生应用的动态服务发现、配置管理和服务管理平台。它是Spring Cloud Alibaba组件之一，负责服务注册发现和服务配置，可以这样认为nacos=eureka+conﬁg。
 
-## 3.3 nacos实战
-### 3.3.1 本地搭建nacos环境
+## 3.3 Nacos实战
+### 3.3.1 本地搭建Nacos环境
 1. 安装nacos
     +[github-nacos-release](https://github.com/alibaba/nacos/releases)
 2. 启动nacos
@@ -617,8 +631,8 @@ echo 'echo 'nacos http://127.0.0.1:8848/nacos'' >> nacos-start.sh;
 
   
 ### 3.3.2 服务注册与发现
-我们在第二章的基础上，将nacos融入我们的微服务中
-#### 3.3.2.1 添加nacos的依赖
+我们在第二章的基础上，将Nacos融入我们的微服务中
+#### 3.3.2.1 添加Nacos的依赖
 在父模块spring-cloud-alibaba-base的pom.xml中，  
 1. 在\<properties\>标签中添加属性
 ```
@@ -632,12 +646,12 @@ echo 'echo 'nacos http://127.0.0.1:8848/nacos'' >> nacos-start.sh;
             <version>${spring-alibaba.version}</version>
         </dependency>
 ```
-#### 3.3.2.2 将各微服务注册到nacos
+#### 3.3.2.2 将各微服务注册到Nacos
 在各微服务的启动类xxApplication上添加注解
 ```
 @EnableDiscoveryClient // 将该服务注册到nacos
 ```
-#### 3.3.2.3 在spring-boot中配置nacos的地址
+#### 3.3.2.3 在spring-boot中配置Nacos的地址
 在各微服务的application.yml中添加nacos服务的地址
 ```
 spring:
@@ -792,8 +806,7 @@ Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为co
 ## 3.5 基于Feign实现服务调用
 ### 3.5.1 什么是Feign
 Feign是Spring Cloud提供的一个声明式的伪Http客户端，它使得调用远程服务就像调用本地服务一样简单，只需要创建一个接口并添加一个注解即可。  
-Nacos很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使用Fegin默认就实现了负
-载均衡的效果。
+Nacos很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使用Fegin默认就实现了负载均衡的效果。
 ### 3.5.2 Feign的使用
 1. 在父模块xx-alibaba-base加入feign的依赖
 ```
