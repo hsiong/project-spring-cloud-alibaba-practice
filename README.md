@@ -75,9 +75,11 @@ spring cloud alibaba learning
     - [4.5.2 重要功能](#452-重要功能)
   - [4.6 规则](#46-规则)
     - [4.6.1 流控规则](#461-流控规则)
-      - [4.6.1.1 流控模式-直接](#4611-流控模式-直接)
-      - [4.6.1.2 流控模式-关联](#4612-流控模式-关联)
-      - [4.6.1.3 流控模式-链路](#4613-流控模式-链路)
+      - [4.6.1.1 流控模式](#4611-流控模式)
+      - [4.6.1.2 流控模式-直接](#4612-流控模式-直接)
+      - [4.6.1.3 @SentinelResource注解实战](#4613-sentinelresource注解实战)
+      - [4.6.1.4 流控模式-关联](#4614-流控模式-关联)
+      - [4.6.1.5 流控模式-链路](#4615-流控模式-链路)
 
 # 第一章 微服务介绍
 ## 1.1 系统架构演变
@@ -904,7 +906,7 @@ server:
   port: 8091
   tomcat:
     threads:
-      max: 10 #tomcat的最大并发值修改为10，默认是200
+      max: 50 #tomcat的最大并发值修改为50，默认是200
 ```
 3. 使用jmeter进行压力测试  
 [Jmeter下载地址](https://jmeter.apache.org/download_jmeter.cgi)  
@@ -1059,7 +1061,11 @@ spring:
 ## 4.6 规则
 ### 4.6.1 流控规则
 流量控制，其原理是监控应用流量的QPS(每秒查询率)或并发线程数等指标，当达到指定的阈值时对流量进行控制，以避免被瞬时的流量高峰冲垮，从而保障应用的高可用性。  
-点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下           
+<b>注意：</b>  
++ <u>流控规则在Sentinel重启或者微服务重启有可能会被删除，以后我们会有专门的章节来介绍流控规则的持久化配置。</u>   
++ <u>Sentinel本身是一个流量监控服务，需要有对应微服务的接口访问，才会在控制台中显示。</u>   
+  
+点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下  
 ![image](https://user-images.githubusercontent.com/37357447/149312642-cb3fb7ee-f212-44dd-87bf-615b9fa5b0a2.png)
 + 资源名：需要限制的请求路径、方法等等
 + 针对来源：指定对哪个微服务进行限流，指default，意思是不区分来源，全部限制  
@@ -1068,16 +1074,195 @@ spring:
     + 线程数：当调用该接口的线程数达到阈值的时候，进行限流
 + 是否集群：暂不需要集群
 + 流控模式：sentinel共有三种流控模式，分别是：
-   + 直接(默认)：接口达到限流条件时，开启限流
+   + 直接(默认)：资源达到限流条件时，开启限流
    + 关联：当关联的资源达到限流条件时，开启限流[当接口A达到限流阈值时, 接口B也限流]  
    + 链路：面向service层用@SentinelResource("xxx")标记的资源，当从某个接口过来的资源达到限流条件时，开启限流(一般来说，该配置不常用)
++ 流控效果: 
+   + 快速失败(默认): 直接失败，抛出异常，不做任何额外的处理，是最简单的效果
+   + Warm Up：它从开始阈值到最大QPS阈值会有一个缓冲阶段，一开始的阈值是最大QPS阈值的1/3 ，然后慢慢增长，直到最大阈值，适用于将突然增大的流量转换为缓步增长的场景
+   + 排队等待：让请求以均匀的速度通过，单机阈值为每秒通过数量，其余的排队等待.它还会让设置一个超时时间，当请求超过超时间时间还未处理，则会被丢弃。
   
 下面，我们来演示各个流控模式的区别，资料参考  
 [sentinel流控设置--关联限流](https://blog.csdn.net/qq_41813208/article/details/107003787)  
 [Sentinel限流规则-流控模式之链路模式](https://www.cnblogs.com/linjiqin/p/15369091.html)  
 
-#### 4.6.1.1 流控模式-直接
+#### 4.6.1.1 流控模式
 
-#### 4.6.1.2 流控模式-关联
 
-#### 4.6.1.3 流控模式-链路
+1. 将OrderService改为如下
+```
+public interface OrderService {
+
+    void save(String msg);
+
+    /**
+     * sentinel-链路测试方法
+     */
+    void sentinelLinkTest();
+}
+```
+
+2. 将OrderServiceImpl改为如下
+```
+@Service
+@Slf4j
+public class OrderServiceImpl implements OrderService {
+
+    @Override
+    public void save(String msg) {
+        log.info("保存订单");
+    }
+
+    @SentinelResource(value = "sentinelLinkTest", blockHandler = "tipHandler")
+    @Override
+    public void sentinelLinkTest() {
+        log.info("sentinel-link-test");
+    }
+
+    /**blockHandler 函数会在原方法被限流/降级/系统保护的时候调用*****/
+    public static void tipHandler(BlockException be) {
+        log.info("您访问的太频繁了，请稍后再试！");
+    }
+
+}
+```
+
+3. 将OrderSentinelController修改成如下代码
+```
+@RestController
+public class OrderSentinelController {
+
+    @Autowired
+    private OrderService orderService;
+
+    @GetMapping("/sentinel/direct")
+    public String direct() {
+        return "直接";
+    }
+
+    @GetMapping("/sentinel/relate1")
+    public String relate1() {
+        return "关联1";
+    }
+
+    @GetMapping("/sentinel/relate2")
+    public String relate2() {
+        return "关联2";
+    }
+
+    @GetMapping("/sentinel/link1")
+    public String link1() {
+        orderService.sentinelLinkTest();
+        return "链路1";
+    }
+
+    @GetMapping("/sentinel/link2")
+    public String link2() {
+        orderService.sentinelLinkTest();
+        return "链路2";
+    }
+}
+```
+
+<b>备注：</b>
+[Jmeter性能测试NoHttpResponseException (the target server failed to respond)](https://blog.csdn.net/just_lion/article/details/46923775)
+
+#### 4.6.1.2 流控模式-直接
+直接模式的作用是资源达到限流条件时，直接对该资源开启限流
+1. 在[Sentinel控制台](http://127.0.0.1:8060/)-簇点链路中，对`/sentinel/direct`资源添加流控规则，为了效果更为明显，将阈值设定为1
+![image](https://user-images.githubusercontent.com/37357447/149469910-3c61c96e-4c6c-4dfa-b10c-856be391910b.png)
+2. 直接访问 http://你的ip:8091/sentinel/direct ，结果如下  
+`Blocked by Sentinel (flow limiting)`
+
+#### 4.6.1.3 @SentinelResource注解实战
+> @SentinelResource 注解详解  
+> + @SentinelResource用于标记特定的资源，在Sentinel对其进行流控
+> + 格式为 @SentinelResource(value = "资源名",blockHandler = "兜底方法名")
+>   + 资源名作为资源的名字，在Sentinel中与接口路径一样，可作为资源进行流控
+>   + 兜底方法用于降级后的服务调用
+> + 一旦使用@SentinelResource注解，则兜底方法不可或缺，否则降级后会抛出`com.alibaba.csp.sentinel.slots.block.flow.FlowException: null`异常
+> + 兜底方法要求：
+>   1. `blockHandler = "兜底方法名"`与`实际方法名`一致
+>   2. 兜底方法必须用`public static`修饰
+>   3. 兜底方法的入参为原方法的入参加上`BlockException be`
+>   4. 兜底方法的返回值必须与原方法一致  
+> 
+> 例子如下:
+> ```
+>  
+>    /**
+>     * 原方法
+>     */
+>    @SentinelResource(value = "sentinelLinkTest", blockHandler = "tipHandler")
+>    @Override
+>    public void sentinelLinkTest() {
+>        log.info("sentinel-link-test");
+>    }
+>
+>    /**
+>     * 兜底方法
+>     */
+>    /**blockHandler 函数会在原方法被限流/降级/系统保护的时候调用*****/
+>    public static void tipHandler(BlockException be) {
+>        log.info("您访问的太频繁了，请稍后再试！");
+>    }
+>
+> ```
+
+1. 对资源`sentinelLinkTest`新增流控规则
+![image](https://user-images.githubusercontent.com/37357447/149492164-c27dc29d-3fed-48b3-8a81-2701d9256522.png)
+
+2. 访问 http://192.168.1.你的ip:8091/sentinel/link1, 观察控制台如下
+![image](https://user-images.githubusercontent.com/37357447/149492494-c79629bd-bac0-4528-8e46-b456389e208c.png)
+
+
+#### 4.6.1.4 流控模式-关联
+关联模式的作用是，流控资源2需要监控资源1
+1. 添加规则如下，流控资源`/sentinel/relate1`，关联资源`/sentinel/relate2`
+![image](https://user-images.githubusercontent.com/37357447/149471677-d6bbda43-4b35-4cb5-baf3-89d2c639950d.png)
+
+2. 设置jmter如下, `relateTest1`对应资源`/sentinel/relate1`, `relateTest1`对应资源`/sentinel/relate2`
+![image](https://user-images.githubusercontent.com/37357447/149473484-1bbd351f-d8d0-4b7c-ad9e-ea583f0c5938.png)
+![image](https://user-images.githubusercontent.com/37357447/149474204-9a312bf4-b31e-4ae0-99e3-a7e9c1b91578.png)
+
+3. 将`relateTest2`置为Disable，点击start单独测试`relateTest1`, 可以发现`relateTest1`不受流控规则限制
+
+4. 将`relateTest2`置为Enable，点击start同时测试relateTest1和relateTest2, `relateTest2`不受流控规则限制  
+而<u>`relateTest1`由于`relateTest2`超过了阈值</u>，结果变为  
+`Blocked by Sentinel (flow limiting)`
+![image](https://user-images.githubusercontent.com/37357447/149474667-4c61e2dc-d196-4d67-a9c2-9c3ac06282dc.png)
+
+#### 4.6.1.5 流控模式-链路
+链路监控一般用于对`@SentinelResource("xxx")`标记的资源进行流控
+1. Sentinel默认会将Controller方法做context整合，导致链路模式的流控失效，需要修改shop-order的application.yml，添加配置：
+```
+spring:
+  cloud:
+    sentinel:
+      transport:
+        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+        dashboard: localhost:8060 # 指定控制台服务的地址
+      web-context-unify: false # 关闭context整合
+```
+
+2. 将兜底方法改为如下
+```
+    /**
+     * 兜底方法
+     */
+    /**blockHandler 函数会在原方法被限流/降级/系统保护的时候调用*****/
+    public static void tipHandler(BlockException be) {
+        log.info("您访问的太频繁了，请稍后再试！");
+        throw new IllegalArgumentException("您访问的太频繁了，请稍后再试！");
+    }
+```
+
+3. 配置链路规则如下
+![image](https://user-images.githubusercontent.com/37357447/149493320-3bac6d54-9744-4630-ab4e-278cfe983fa5.png)
+
+4. 类似关联模式的测试, 我们配置两个jmeter测试类
+![image](https://user-images.githubusercontent.com/37357447/149493001-c76de154-80d9-4620-afe3-9842cded69b2.png)
+
+5. 启动测试, 可以看到`linkTest2`正常, 而受限的链路`linkTest1`进入了兜底函数
+   ![image](https://user-images.githubusercontent.com/37357447/149493813-927de642-3066-473c-a56b-9de329ae3ecf.png)
+
