@@ -1,6 +1,7 @@
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
 
+- [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
     - [1.1.1 单体应用架构](#111-单体应用架构)
@@ -73,9 +74,9 @@ spring cloud alibaba learning
   - [4.5 Sentinel的概念和功能](#45-sentinel的概念和功能)
     - [4.5.1 基本概念](#451-基本概念)
     - [4.5.2 重要功能](#452-重要功能)
-  - [4.6 规则](#46-规则)
+  - [4.6 Sentinel规则](#46-sentinel规则)
     - [4.6.1 流控规则](#461-流控规则)
-      - [4.6.1.1 流控模式](#4611-流控模式)
+      - [4.6.1.1 流控模式实战](#4611-流控模式实战)
       - [4.6.1.2 流控模式-直接](#4612-流控模式-直接)
       - [4.6.1.3 @SentinelResource注解实战](#4613-sentinelresource注解实战)
       - [4.6.1.4 流控模式-关联](#4614-流控模式-关联)
@@ -1058,7 +1059,7 @@ spring:
 
 总之，我们需要做的事情，就是在Sentinel的资源上配置各种各样的规则，来实现各种容错的功能。
 
-## 4.6 规则
+## 4.6 Sentinel规则
 ### 4.6.1 流控规则
 流量控制，其原理是监控应用流量的QPS(每秒查询率)或并发线程数等指标，当达到指定的阈值时对流量进行控制，以避免被瞬时的流量高峰冲垮，从而保障应用的高可用性。  
 <b>注意：</b>  
@@ -1086,7 +1087,7 @@ spring:
 [sentinel流控设置--关联限流](https://blog.csdn.net/qq_41813208/article/details/107003787)  
 [Sentinel限流规则-流控模式之链路模式](https://www.cnblogs.com/linjiqin/p/15369091.html)  
 
-#### 4.6.1.1 流控模式
+#### 4.6.1.1 流控模式实战
 
 
 1. 将OrderService改为如下
