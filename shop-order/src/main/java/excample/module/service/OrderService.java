@@ -1,5 +1,7 @@
 package excample.module.service;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+
 /**
  * @author JF
  * @version 1.0.0
@@ -10,4 +12,8 @@ public interface OrderService {
 
     void save(String msg);
 
+    /**
+     * sentinel-链路测试方法
+     */
+    void sentinelLinkTest();
 }
