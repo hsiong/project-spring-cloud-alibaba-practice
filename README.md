@@ -1,7 +1,6 @@
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
 
-- [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
 - [序言](#序言)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
