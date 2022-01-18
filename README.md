@@ -81,6 +81,24 @@ spring cloud alibaba learning
       - [4.6.1.3 @SentinelResource注解实战](#4613-sentinelresource注解实战)
       - [4.6.1.4 流控模式-关联](#4614-流控模式-关联)
       - [4.6.1.5 流控模式-链路](#4615-流控模式-链路)
+    - [4.6.2 降级规则](#462-降级规则)
+      - [4.6.2.1 降级规则实战](#4621-降级规则实战)
+      - [4.6.2.2 慢调用比例](#4622-慢调用比例)
+      - [4.6.2.3 异常比例](#4623-异常比例)
+      - [4.6.2.4 异常数](#4624-异常数)
+    - [4.6.3 热点规则](#463-热点规则)
+    - [4.6.3.1 热点规则基础篇](#4631-热点规则基础篇)
+    - [4.6.3.2 热点规则高级规则](#4632-热点规则高级规则)
+    - [4.6.4 授权规则](#464-授权规则)
+      - [4.6.4.1 授权规则实战](#4641-授权规则实战)
+    - [4.6.5 系统规则](#465-系统规则)
+      - [4.6.5.1 背景](#4651-背景)
+      - [4.6.5.2 系统规则](#4652-系统规则)
+      - [4.6.5.3 原理](#4653-原理)
+      - [4.6.5.4 系统规则实战](#4654-系统规则实战)
+  - [4.7 Sentinel自定义异常](#47-sentinel自定义异常)
+    - [4.7.1 引入](#471-引入)
+    - [4.7.2 Sentinel自定义异常实战](#472-sentinel自定义异常实战)
 
 # 序言
 在文章开头, 我们总结一下spring cloud alibaba各组件的功能, 给您一个大致的思路和便于您日后的复习。  
@@ -775,7 +793,7 @@ Ribbon是Spring Cloud的一个组件，它可以让我们使用一个注解就�
 ``` 
 
 #### 3.4.3.2 Ribbon支持的负载均衡策略
-Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为com.netflix.loadbalancer.IRule，具体的负载策略如下图所示:
+Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为com.netflix.Loadbalancer.IRule，具体的负载策略如下图所示:
 
 ![image](https://user-images.githubusercontent.com/37357447/149099393-949b8855-c90b-43dd-aa77-6e1545f7bcb4.png)
 
@@ -870,8 +888,8 @@ public class OrderController {
 5. 重启服务消费方order-shop， 访问[http://localhost:8091/order/prod/4444](http://localhost:8091/order/prod/4444)查看效果  
 
 <b>注意: </b>  
-1. 若重启过程中， 提示"No Feign Client for loadBalancing defined.Did you forget to include spring-cloud-starter-loadbalance"， 请优先修改feign的版本， 使feign的版本与您的spring-cloud-alibaba版本一致。  
-请不要用loadBalancing替换ribbon。在一段时间内， 仅支持轮询策略的loadbalance还不能替代ribbon。
+1. 若重启过程中， 提示"No Feign Client for LoadBalancing defined.Did you forget to include spring-cloud-starter-Loadbalance"， 请优先修改feign的版本， 使feign的版本与您的spring-cloud-alibaba版本一致。  
+请不要用LoadBalancing替换ribbon。在一段时间内， 仅支持轮询策略的Loadbalance还不能替代ribbon。
 2. 
 
 # 第四章 Sentinel--服务容错
@@ -922,7 +940,7 @@ server:
       max: 50 #tomcat的最大并发值修改为50，默认是200
 ```
 3. 使用jmeter进行压力测试  
-[Jmeter下载地址](https://jmeter.apache.org/download_jmeter.cgi)  
+[Jmeter下载地址](https://jmeter.apache.org/downLoad_jmeter.cgi)  
 [Jmeter性能测试的基本操作](https://www.cnblogs.com/color-cc/p/13585144.html)  
     1. 设置线程并发数
 ![image](https://user-images.githubusercontent.com/37357447/149298447-0a20d5b6-8d81-455f-afa2-ec3fa13f171d.png)
@@ -1189,6 +1207,7 @@ public class OrderSentinelController {
 
 #### 4.6.1.3 @SentinelResource注解实战
 > @SentinelResource 注解详解  
+> + <b>注意: </b>该注解非常重要, 在实际使用时, 常用该注解而不是直接使用接口路径作为路径, 以避免限流降级接口返回`Whitelable Error Page`, 在本文档中, 出于方便学习的目的, 多用接口路径直接作讲解
 > + @SentinelResource用于标记特定的资源，在Sentinel对其进行流控
 > + 格式为 @SentinelResource(value = "资源名",blockHandler = "兜底方法名")
 >   + 资源名作为资源的名字，在Sentinel中与接口路径一样，可作为资源进行流控
@@ -1279,3 +1298,322 @@ spring:
 5. 启动测试, 可以看到`linkTest2`正常, 而受限的链路`linkTest1`进入了兜底函数
    ![image](https://user-images.githubusercontent.com/37357447/149493813-927de642-3066-473c-a56b-9de329ae3ecf.png)
 
+### 4.6.2 降级规则
++ 对调用链路中不稳定的资源进行熔断降级也是保障高可用的重要措施之一。  
++ 对不稳定的弱依赖服务调用进行熔断降级，暂时切断不稳定调用，避免局部不稳定因素导致整体的雪崩。  
++ 熔断降级作为保护自身的手段，通常在客户端（调用端）进行配置。  
+#### 4.6.2.1 降级规则实战
+将OrderSentinelController改为如下
+```
+@RestController
+@RequestMapping("/sentinel")
+public class OrderSentinelController {
+
+    @Autowired
+    private OrderService orderService;
+
+    /*********************** 流控模式测试 ***************************/
+
+    @GetMapping("/direct")
+    public String direct() {
+        return "直接";
+    }
+
+    /**
+     * 关联模式测试
+     * @return
+     */
+    @GetMapping("/relate1")
+    public String relate1() {
+        return "关联1";
+    }
+
+    /**
+     * 关联模式测试
+     * @return
+     */
+    @GetMapping("/relate2")
+    public String relate2() {
+        return "关联2";
+    }
+
+    /**
+     * 链路模式测试
+     * @return
+     */
+    @GetMapping("/link1")
+    public String link1() {
+        orderService.sentinelLinkTest();
+        return "链路1";
+    }
+
+    /**
+     * 链路模式测试
+     * @return
+     */
+    @GetMapping("/link2")
+    public String link2() {
+        orderService.sentinelLinkTest();
+        return "链路2";
+    }
+
+    /*********************** 降级规则测试 ***************************/
+
+    /**
+     * 慢调用比例(RT)测试
+     * @return
+     * @throws InterruptedException
+     */
+    @GetMapping("slowRequestRadio")
+    public String slowRequestRadio() throws InterruptedException {
+        double random = Math.random();
+        if (random > 0.5) {
+            Thread.sleep(2000);
+        }
+        return "slowRequestRadio";
+    }
+
+    /**
+     * 异常比例测试
+     * @return
+     */
+    @GetMapping("errorRadio")
+    public String errorRadio() {
+        double random = Math.random();
+        if (random > 0.5) {
+            throw new IllegalArgumentException("error");
+        }
+        return "errorRadio";
+    }
+
+    /**
+     * 异常数测试
+     * @return
+     */
+    @GetMapping("errorCount")
+    public String errorCount() {
+        double random = Math.random();
+        if (random > 0.5) {
+            throw new IllegalArgumentException("error");
+        }
+        return "errorCount";
+    }
+
+}
+```
+#### 4.6.2.2 慢调用比例
+慢调用比例 (SLOW_REQUEST_RATIO)：选择以慢调用比例作为阈值，需要设置允许的慢调用 RT（即最大的响应时间），请求的响应时间大于该值则统计为慢调用。当统计时长（statIntervalMs）内请求数目大于设置的最小请求数目，并且慢调用的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN 状态），若接下来的一个请求响应时间小于设置的慢调用 RT 则结束熔断，若大于设置的慢调用 RT 则会再次被熔断。  
++ 最大RT: 最大请求响应时间(单位:ms)
++ 比例阈值: 慢调用统计数对于最小请求数的占有比例
++ 熔断时长: 超过时间后会尝试恢复
++ 最小请求数: 触发熔断的最小请求数目，若当前统计窗口内的请求数小于此值，即使达到了熔断条件也不会触发
++ 统计时长: 监控的一个时间段
+1. 配置降级规则如下, 这里我们为了效果更加明显, 将各值都调整到较明显的值
+   ![image](https://user-images.githubusercontent.com/37357447/149705530-1d255220-8862-4174-a39b-9989785ad6df.png)
+2. 配置jmeter如下
+   ![image](https://user-images.githubusercontent.com/37357447/149705562-ed8e2d00-e951-42b3-8ee0-b0284c42fd0b.png)
+3. 点击测试, 结果如下
+   ![image](https://user-images.githubusercontent.com/37357447/149705594-0ce5cce6-51ec-495f-8f2d-52db16b2d77d.png)
+
+#### 4.6.2.3 异常比例
+异常比例 (ERROR_RATIO)：当单位统计时长（statIntervalMs）内请求数目大于设置的最小请求数目，并且异常的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN 状态），若接下来的一个请求成功完成（没有错误）则结束熔断，否则会再次被熔断。异常比率的阈值范围是 [0.0, 1.0]，代表 0% - 100%。
+1. 配置降级规如下, 操作和结果与[4.6.2.2 慢调用比例](#4622-慢调用比例)类似, 不再累述
+![image](https://user-images.githubusercontent.com/37357447/149705730-417036f4-4032-435d-8f17-805844c66202.png)
+
+#### 4.6.2.4 异常数
+异常数 (ERROR_COUNT)：当单位统计时长内的异常数目超过阈值之后会自动进行熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN 状态），若接下来的一个请求成功完成（没有错误）则结束熔断，否则会再次被熔断。
+![image](https://user-images.githubusercontent.com/37357447/149705962-6ce84fc4-c99a-4232-bff3-fe7e759f91ca.png)
+
+### 4.6.3 热点规则
+何为热点？热点即经常访问的数据。很多时候我们希望统计某个热点数据中访问频次最高的Top K数据，并对其访问进行限制。比如：
++ 商品(shopId)为参数，统计一段时间内最常购买的商品ID并进行限制
++ 用户(userId)为参数，针对一段时间内频繁访问的用户ID进行限制
+热点参数限流会统计传入参数中的热点参数，并根据配置的限流阈值与模式，对包含热点参数的资源调用进行限流。热点参数限流可以看做是一种特殊的流量控制，仅对包含热点参数的资源调用生效。
+
+### 4.6.3.1 热点规则基础篇
+1. 在`OrderSentinelController`中添加代码
+```
+    /*********************** 热点规则测试 ***************************/
+
+    /**
+     * 热点规则测试
+     * 热点参数限流对默认的SpringMVC资源无效
+     *
+     * @return
+     */
+    @GetMapping("paramBlock")
+    @SentinelResource(value = "paramBlock", blockHandler = "paramBlockHandler")
+    public String paramBlock(@RequestParam(name = "param", required = false) String param,
+                             @RequestParam(name = "index", required = false) Integer index) {
+        return "paramBlock";
+    }
+
+    public String paramBlockHandler(String param, Integer index, BlockException ex) {
+        throw new IllegalArgumentException();
+    }
+```
+2. 配置如下图
+    + 参数索引: 对第几个参数做限流控制, 类似数组, 从0开始, 参数索引0代表接口中的第1个参数
+    + 单机阈值: QPS
+    + <b>注意: </b>热点参数限流对默认的SpringMVC资源无效, 仅对`@SentinelResource`标记的资源生效
+
+    ![image](https://user-images.githubusercontent.com/37357447/149720798-4c178d3c-b3d9-459d-9239-f38369a5223a.png)
+
+3. jmeter配置如下
+   ![image](https://user-images.githubusercontent.com/37357447/149721041-13d56780-b76d-4a9b-a225-5d3d72e244d9.png)
+
+4. 运行结果如下, 可以发现代码进入了限流兜底方法`paramBlockHandler`
+   ![image](https://user-images.githubusercontent.com/37357447/149721328-1e9db4b6-67de-4a7e-a92b-56d8f415e08f.png)
+
+### 4.6.3.2 热点规则高级规则
+上面讲了热点key的参数限流，第一个参数当QPS超过1秒1次点击后马上被限流，这是普通的案例超过1秒钟一个后，达到阈值1后马上被限流，但是也有参数例外的情况。  
+当我们期望第一个参数当它是某个特殊值时，它的限流值和平时不一样，假如当p1的值等于5时，它的阈值可以达到200，这种参数例外的情况，我们就使用到了热点配置的高级属性。
+
+1. 配置如图  
+   + 参数值: 当参数的值为该值时, 进行限流
+   + <b>注意: </b>此处的参数类型只能为基本类型和String类型。
+  
+    ![image](https://user-images.githubusercontent.com/37357447/149736479-e28b2f4e-0d07-4d82-9218-75decc707db3.png)
+
+
+2. jmeter测试, 修改param的值, 可以发现, 当param值为123时, 系统未限流, 而其他值的结果与[4.6.3.1 热点规则基础篇](#4631-热点规则基础篇)一致
+
+### 4.6.4 授权规则
+很多时候，我们需要根据调用来源来判断该次请求是否允许放行，这时候可以使用Sentinel的来源访问控制的功能。来源访问控制根据资源的请求来源（origin）限制资源是否通过。
+简单地说, 授权某个接口给上游某些微服务调用。
++ 资源名: 以`@SentinelResource`定义的资源
++ 授权类型: 
+  + 若配置白名单，则只有请求来源位于白名单内时才可通过
+  + 若配置黑名单，则请求来源位于黑名单时不通过，其余的请求通过
++ 授权应用:   
+  授权应用的名称由`RequestOriginParser`确定
+
+#### 4.6.4.1 授权规则实战
+1. 新增`RequestOriginParserDefinition`用于定义授权应用名
+```
+@Component
+public class RequestOriginParserDefinition implements RequestOriginParser {
+
+    @Override
+    public String parseOrigin(HttpServletRequest httpServletRequest) {
+        // 指定授权应用名为参数servicename
+        String serviceName = httpServletRequest.getParameter("servicename");
+        return serviceName;
+    }
+}
+```
+
+2. 授权规则定义如下, 定义应用名为1234的服务, 为黑名单, 禁止访问
+![image](https://user-images.githubusercontent.com/37357447/149887328-cfefcedd-0efc-42b6-9246-f32493e0b308.png)
+
+3. 访问`http://localhost:8091/sentinel/paramBlock?servicename=1234`, 观察效果, 发现代码进入了流控兜底函数`paramBlockHandler`
+
+### 4.6.5 系统规则
+#### 4.6.5.1 背景
+在开始之前，我们先了解一下系统保护的目的：
++ 保证系统不被拖垮
++ 在系统稳定的前提下，保持系统的吞吐量
+
+长期以来，系统保护的思路是根据硬指标，即系统的负载(Load)来做系统过载保护。当系统负载高于某个阈值，就禁止或者减少流量的进入；当 Load 开始好转，则恢复流量的进入。
+
+这个思路给我们带来了不可避免的两个问题：
+1. Load 是一个“结果”，如果根据 Load 的情况来调节流量的通过率，那么就始终有延迟性。也就意味着通过率的任何调整，都会过一段时间才能看到效果。当前通过率是使 Load 恶化的一个动作，那么也至少要过1秒之后才能观测到；同理，如果当前通过率调整是让 Load 好转的一个动作，也需要1秒之后才能继续调整，这样就浪费了系统的处理能力。所以我们看到的曲线，总是会有抖动。
+2. 恢复慢。想象一下这样的一个真实场景: 出现了这样一个问题，下游应用不可靠，导致应用 RT 很高，从而 Load 到了一个很高的点。过了一段时间之后下游应用恢复了，应用 RT 也相应减少。这个时候，其实应该大幅度增大流量的通过率；但是由于这个时候 Load 仍然很高，通过率的恢复仍然不高。  
+
+TCP BBR 的思想给了我们一个很大的启发。我们应该根据系统能够处理的请求，和允许进来的请求，来做平衡，而不是根据一个间接的指标（系统 Load）来做限流。  
+最终我们追求的目标是: 在系统不被拖垮的情况下，提高系统的吞吐率，而不是 Load 一定要到低于某个阈值。如果我们还是按照固有的思维，超过特定的 Load 就禁止流量进入，系统 Load 恢复就放开流量，这样做的结果是无论我们怎么调参数，调比例，都是按照果来调节因，都无法取得良好的效果。
+
+Sentinel 在系统自适应保护的做法是，用 Load 作为启动自适应保护的因子，而允许通过的流量由处理请求的能力，即请求的响应时间以及当前系统正在处理的请求速率来决定。
+
+#### 4.6.5.2 系统规则
+系统保护规则是从应用级别的入口流量进行控制，从单台机器的总体Load、RT、入口QPS、CPU使用率和线程数五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。  
+系统保护规则是应用整体维度的，而不是资源维度的，并且仅对入口流量(进入应用的流量)生效。  
++ Load(仅对 Linux/Unix-like 机器生效)：当系统Load1超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。
+  系统容量由系统的 maxQps * minRt 计算得出。设定参考值一般是CPU cores * 2.5。
++ 平均RT：当单台机器上所有入口流量的平均RT达到阈值即触发系统保护，单位是毫秒。
++ 线程数：当单台机器上所有入口流量的并发线程数达到阈值即触发系统保护。
++ 入口 QPS：当单台机器上所有入口流量的QPS达到阈值即触发系统保护。
++ CPU使用率：当单台机器上所有入口流量的CPU使用率达到阈值即触发系统保护。
+
+#### 4.6.5.3 原理
+
+![image](https://user-images.githubusercontent.com/9434884/50813887-bff10300-1352-11e9-9201-437afea60a5a.png)
+
+我们把系统处理请求的过程想象为一个水管，到来的请求是往这个水管灌水，当系统处理顺畅的时候，请求不需要排队，直接从水管中穿过，这个请求的RT是最短的；反之，当请求堆积的时候，那么处理请求的时间则会变为：排队时间 + 最短处理时间。
+
+1. 推论一: 
+   + 如果我们能够保证水管里的水量，能够让水顺畅的流动，则不会增加排队的请求；也就是说，这个时候的系统负载不会进一步恶化。我们用 T 来表示(水管内部的水量)，用 RT 来表示请求的处理时间，用 P 来表示进来的请求数，那么一个请求从进入水管道到从水管出来，这个水管会存在 P * RT 个请求。换一句话来说，当 T ≈ QPS * Avg(RT) 的时候，我们可以认为系统的处理能力和允许进入的请求个数达到了平衡，系统的负载不会进一步恶化。
+   + 接下来的问题是，水管的水位是可以达到了一个平衡点，但是这个平衡点只能保证水管的水位不再继续增高，但是还面临一个问题，就是在达到平衡点之前，这个水管里已经堆积了多少水。如果之前水管的水已经在一个量级了，那么这个时候系统允许通过的水量可能只能缓慢通过，RT会大，之前堆积在水管里的水会滞留；反之，如果之前的水管水位偏低，那么又会浪费了系统的处理能力。
+
+1. 推论二:
+     + 当保持入口的流量是水管出来的流量的最大的值的时候，可以最大利用水管的处理能力。然而，和 TCP BBR 的不一样的地方在于，还需要用一个系统负载的值（load）来激发这套机制启动。
+
+注：这种系统自适应算法对于低 load 的请求，它的效果是一个“兜底”的角色。对于不是应用本身造成的 load 高的情况（如其它进程导致的不稳定的情况），效果不明显。
+
+#### 4.6.5.4 系统规则实战
+1. 配置如图
+![image](https://user-images.githubusercontent.com/37357447/149897700-7c044ebe-7e96-4e2f-b837-b80fe5661c2f.png)
+
+2. 使用jmeter测试任意接口, 当`QPS>10`, 接口提示`Block by Sentinel (flow limiting)`
+
+## 4.7 Sentinel自定义异常
+### 4.7.1 引入
+在之前的测试中, 我们发现了以下问题
++ Sentinel一旦发生流控, 默认都会返回`Block by Sentinel (flow limiting)`, 这对我们的实际开发是非常不利的
++ 虽然可以用`blockHandler=xxx`指定兜底函数, 但是有以下问题
+    + 仅对`@SentinelResource`标记的资源有用
+    + 需要每个方法分别指定, 十分麻烦
+    + 不支持系统规则流控
+
+这样, 我们就在想, 有没有一种办法, 能够像java的`全局异常处理`一样, 在某个地方统一处理 Sentinel 流控后的结果, 返回我们自定义的结果?
+于是, 我们引入了Sentinel自定义异常`BlockExceptionHandler`
+
+> BlockException的实现类
+> + FlowException  限流异常
+> + DegradeException  降级异常
+> + ParamFlowException  参数限流异常
+> + AuthorityException  授权异常
+> + SystemBlockException  系统负载异常
+
+### 4.7.2 Sentinel自定义异常实战
+1. 新增`SentinelExceptionHandler`如下
+```
+@Component
+public class SentinelExceptionHandler implements BlockExceptionHandler {
+
+    @Override
+    public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
+                       BlockException e) throws Exception {
+        // 在这里定义您流控的返回值
+        String result = "";
+        /**
+         * //  FlowException  限流异常
+         * //  DegradeException  降级异常
+         * //  ParamFlowException  参数限流异常
+         * //  AuthorityException  授权异常
+         * //  SystemBlockException  系统负载异常
+         */
+        if (e instanceof FlowException) {
+            result = "接口限流了";
+        } else if (e instanceof DegradeException) {
+            result = "服务降级了";
+        } else if (e instanceof ParamFlowException) {
+            result = "热点参数限流了";
+        } else if (e instanceof AuthorityException) {
+            result = "授权规则不通过";
+        } else if (e instanceof SystemBlockException) {
+            result = "系统规则（负载/...不满足要求）";
+        }
+        // http状态码
+        httpServletResponse.setStatus(500);
+        httpServletResponse.setCharacterEncoding("utf-8");
+        httpServletResponse.setHeader("Content-Type", "application/json;charset=utf-8");
+        httpServletResponse.setContentType("application/json;charset=utf-8");
+        // spring mvc自带的json操作工具，叫jackson
+        new ObjectMapper().writeValue(httpServletResponse.getWriter(), result);
+    }
+
+}
+```
+
+2. 结合之前所学, 定义任意规则, 使用jmeter测试
