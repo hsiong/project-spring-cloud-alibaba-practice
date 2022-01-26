@@ -1642,9 +1642,6 @@ DegradeRuleManager.loadRules(List<DegradeRule> rules); // 修改降级规则
 ### 4.8.2 DataSource扩展
 上述 `loadRules()` 方法只接受内存态的规则对象，但更多时候规则存储在文件、数据库或者配置中心当中。DataSource 接口给我们提供了对接任意配置源的能力。相比直接通过 API 修改规则，实现 DataSource 接口是更加可靠的做法。
 
-我们推荐通过控制台设置规则后将规则推送到统一的规则中心，客户端实现 ReadableDataSource 接口端监听规则中心实时获取变更，流程如下：
-![image](https://user-images.githubusercontent.com/37357447/149910875-21e26670-80dd-42ec-97de-56ca1e40779e.png)
-
 DataSource 扩展常见的实现方式有:
 + 拉模式：客户端主动向某个规则管理中心定期轮询拉取规则，这个规则中心可以是 RDBMS、文件，甚至是 VCS 等。这样做的方式是简单，缺点是无法及时获取变更；
 + 推模式：规则中心统一推送，客户端通过注册监听器的方式时刻监听变化，比如使用 Nacos、Zookeeper 等配置中心。这种方式有更好的实时性和一致性保证。
@@ -1655,6 +1652,9 @@ Sentinel 目前支持以下数据源扩展：
 
 > 拉模式拓展  
 实现拉模式的数据源最简单的方式是继承 [AutoRefreshDataSource](https://github.com/alibaba/Sentinel/blob/master/sentinel-extension/sentinel-datasource-extension/src/main/java/com/alibaba/csp/sentinel/datasource/AutoRefreshDataSource.java) 抽象类，然后实现readSource()方法，在该方法里从指定数据源读取字符串格式的配置数据。比如[基于文件的数据源](https://github.com/alibaba/Sentinel/blob/master/sentinel-demo/sentinel-demo-dynamic-file-rule/src/main/java/com/alibaba/csp/sentinel/demo/file/rule/FileDataSourceDemo.java)。
+
+![image](https://user-images.githubusercontent.com/37357447/151140012-f8b9d34a-446f-47ab-9be1-440afdfaad62.png)
+
 
 ```
 public class FileDataSourceInit implements InitFunc {
@@ -1680,3 +1680,19 @@ public class FileDataSourceInit implements InitFunc {
     }
 }
 ```
+
+> 推模式拓展  
+生产环境下一般更常用的是 push 模式的数据源。对于 push 模式的数据源,如远程配置中心（ZooKeeper, Nacos, Apollo等等），推送的操作不应由 Sentinel 客户端进行，而应该经控制台统一进行管理，直接进行推送，数据源仅负责获取配置中心推送的配置并更新到本地。因此推送规则正确做法应该是 配置中心控制台/Sentinel 控制台 → 配置中心 → Sentinel 数据源 → Sentinel，而不是经 Sentinel 数据源推送至配置中心。
+
+![image](https://user-images.githubusercontent.com/37357447/151139744-f5178463-43ba-43c4-9e6c-1ed4488973cf.png)
+
+
+实现推模式的数据源最简单的方式是继承 AbstractDataSource 抽象类，在其构造方法中添加监听器，并实现 readSource() 从指定数据源读取字符串格式的配置数据。比如 基于 Nacos 的数据源。控制台通常需要做一些改造来直接推送应用维度的规则到配置中心。
+
+实际上, 我们有以下方式来实现推模式:
+1. 使用 Nacos 配置规则
+2. 使用 ZooKeeper 配置规则
+3. 使用 Apollo 配置规则
+4. 使用 Redis 配置规则
+
+### 4.8.3 推模式拓展实战
