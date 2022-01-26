@@ -1,8 +1,7 @@
 # spring-cloud-alibaba-base
 spring cloud alibaba learning
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="知识共享许可协议" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a><br />本作品采用<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>进行许可。
-
+- [spring-cloud-alibaba-base](#spring-cloud-alibaba-base)
 - [序言](#序言)
 - [第一章 微服务介绍](#第一章-微服务介绍)
   - [1.1 系统架构演变](#11-系统架构演变)
@@ -101,9 +100,10 @@ spring cloud alibaba learning
   - [4.7 Sentinel自定义异常](#47-sentinel自定义异常)
     - [4.7.1 引入](#471-引入)
     - [4.7.2 Sentinel自定义异常实战](#472-sentinel自定义异常实战)
+  - [4.8 Sentinal规则持久化](#48-sentinal规则持久化)
 
 # 序言
-在文章开头, 我们总结一下spring cloud alibaba各组件的功能, 给您一个大致的思路以便于您日后的学习。  
+在文章开头, 我们总结一下spring cloud alibaba各组件的功能, 给您一个大致的思路和便于您日后的复习。  
 也许这些概念和组件您目前还不能理解, 不过没关系, 随着我们学习的深入, 您会慢慢理解这些概念的意义和这些组件的功能。
 |组件|功能|
 |:-:|:-:|
@@ -1095,7 +1095,7 @@ spring:
 ### 4.6.1 流控规则
 流量控制，其原理是监控应用流量的QPS(每秒查询率)或并发线程数等指标，当达到指定的阈值时对流量进行控制，以避免被瞬时的流量高峰冲垮，从而保障应用的高可用性。  
 <b>注意：</b>  
-+ <u>流控规则在Sentinel重启或者微服务重启有可能会被删除，以后我们会有专门的章节来介绍流控规则的持久化配置。</u>   
++ <u>流控规则在Sentinel重启或者微服务重启有可能会被删除，以后我们会有专门的章节([4.8 Sentinal规则持久化](#48-sentinal规则持久化))来介绍流控规则的持久化配置。</u>   
 + <u>Sentinel本身是一个流量监控服务，需要有对应微服务的接口访问，才会在控制台中显示。</u>   
   
 点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下  
@@ -1619,3 +1619,64 @@ public class SentinelExceptionHandler implements BlockExceptionHandler {
 ```
 
 2. 结合之前所学, 定义任意规则, 使用jmeter测试
+
+## 4.8 Sentinal规则持久化
+我们在[4.6 Sentinel规则](#46-sentinel规则)中提过, 虽然我们可以直接通过Sentinel-Dashboard来为每个Sentinel客户端设置各种各样的规则, 但是这些规则默认是存放在内存中，极不稳定, 而且当微服务重启后, 对应的规则就丢失了, 那么有没有一种办法, 让这些规则持久化呢?   
+参考资料: 
++ [生产环境使用 Sentinel](https://github.com/alibaba/Sentinel/wiki/%E5%9C%A8%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E4%B8%AD%E4%BD%BF%E7%94%A8-Sentinel)  
++ [动态数据拓展](https://github.com/alibaba/Sentinel/wiki/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%99%E6%89%A9%E5%B1%95)
+
+### 4.8.1 规则
+Sentinel 的理念是开发者只需要关注资源的定义，当资源定义成功后可以动态增加各种流控降级规则。  
+Sentinel 提供两种方式修改规则：
+1. 通过 API 直接修改(`loadRules`)  
+  手动通过 API 修改比较直观，可以通过以下几个 API 修改不同的规则：
+```
+FlowRuleManager.loadRules(List<FlowRule> rules); // 修改流控规则
+DegradeRuleManager.loadRules(List<DegradeRule> rules); // 修改降级规则
+```
+2. 通过 `DataSource` 适配不同数据源修改
+  
+手动修改规则（硬编码方式）一般仅用于测试和演示，生产上一般通过动态规则源的方式来动态管理规则。
+
+### 4.8.2 DataSource扩展
+上述 `loadRules()` 方法只接受内存态的规则对象，但更多时候规则存储在文件、数据库或者配置中心当中。DataSource 接口给我们提供了对接任意配置源的能力。相比直接通过 API 修改规则，实现 DataSource 接口是更加可靠的做法。
+
+我们推荐通过控制台设置规则后将规则推送到统一的规则中心，客户端实现 ReadableDataSource 接口端监听规则中心实时获取变更，流程如下：
+![image](https://user-images.githubusercontent.com/37357447/149910875-21e26670-80dd-42ec-97de-56ca1e40779e.png)
+
+DataSource 扩展常见的实现方式有:
++ 拉模式：客户端主动向某个规则管理中心定期轮询拉取规则，这个规则中心可以是 RDBMS、文件，甚至是 VCS 等。这样做的方式是简单，缺点是无法及时获取变更；
++ 推模式：规则中心统一推送，客户端通过注册监听器的方式时刻监听变化，比如使用 Nacos、Zookeeper 等配置中心。这种方式有更好的实时性和一致性保证。
+
+Sentinel 目前支持以下数据源扩展：
++ 拉模式: 动态文件数据源、Consul, Eureka
++ 推模式: ZooKeeper, Redis, Nacos, Apollo, etcd
+
+> 拉模式拓展  
+实现拉模式的数据源最简单的方式是继承 [AutoRefreshDataSource](https://github.com/alibaba/Sentinel/blob/master/sentinel-extension/sentinel-datasource-extension/src/main/java/com/alibaba/csp/sentinel/datasource/AutoRefreshDataSource.java) 抽象类，然后实现readSource()方法，在该方法里从指定数据源读取字符串格式的配置数据。比如[基于文件的数据源](https://github.com/alibaba/Sentinel/blob/master/sentinel-demo/sentinel-demo-dynamic-file-rule/src/main/java/com/alibaba/csp/sentinel/demo/file/rule/FileDataSourceDemo.java)。
+
+```
+public class FileDataSourceInit implements InitFunc {
+
+    @Override
+    public void init() throws Exception {
+        String flowRulePath = "xxx";
+
+        ReadableDataSource<String, List<FlowRule>> ds = new FileRefreshableDataSource<>(
+            flowRulePath, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {})
+        );
+        // 将可读数据源注册至 FlowRuleManager.
+        FlowRuleManager.register2Property(ds.getProperty());
+
+        WritableDataSource<List<FlowRule>> wds = new FileWritableDataSource<>(flowRulePath, this::encodeJson);
+        // 将可写数据源注册至 transport 模块的 WritableDataSourceRegistry 中.
+        // 这样收到控制台推送的规则时，Sentinel 会先更新到内存，然后将规则写入到文件中.
+        WritableDataSourceRegistry.registerFlowDataSource(wds);
+    }
+
+    private <T> String encodeJson(T t) {
+        return JSON.toJSONString(t);
+    }
+}
+```
