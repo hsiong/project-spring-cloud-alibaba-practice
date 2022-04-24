@@ -1,0 +1,19 @@
+server:
+  port: 8091
+spring:
+  application:
+    name: shop-order
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    sentinel:
+      transport:
+        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+        dashboard: localhost:8060 # 指定控制台服务的地址
+      web-context-unify: false # 关闭context整合
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true
+    username: root
+    password:
