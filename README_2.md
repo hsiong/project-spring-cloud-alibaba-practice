@@ -1,6 +1,12 @@
 
 
 # 序言
+重新写本文的意义在于, 深入学习微服务, 掌握"蓝绿、灰度、路由、限流、熔断、降级、隔离、追踪、流量染色、故障转移、多活"等概念和实现方式, 以及从原理上深入学习alibaba如何实现的这些功能
+
+参考书籍目前主要有以下几个: 
++ [Spring Cloud Alibaba 笔记: 马士兵](./Spring_Cloud_Alibaba_笔记:马士兵.pdf)
++ [Spring Cloud 构建微服务架构: 翟永超](https://blog.didispace.com/spring-cloud-learning/)
++ [SpringBoot-Labs: 芋道源码(Ruoyi owner)](https://github.com/YunaiV/SpringBoot-Labs)
 
 # 解决问题
 

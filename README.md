@@ -286,6 +286,8 @@ Gateway，   Zuul，   Dubbo 和 RocketMQ 限流降级功能的接入，可以�
 |lombok|任意版本|
 |MySQL|5.7(任意版本， 8.0以上需要修改配置)|
 
+m1不兼容: 
+https://github.com/alibaba/nacos/issues/9015
  <b style='color:red'>注意: </b>若未满足版本对应关系， 将会出现各种问题 [spring cloud alibaba 版本对应](https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E)  
         
 ### 2.1.2 模块设计
@@ -644,7 +646,7 @@ touch nacos-start.sh;
 chmod -R 755 nacos-start.sh;  
 echo '#!/bin/bash' >> nacos-start.sh;
 echo 'cd 您的目录/nacos/bin' >> nacos-start.sh;
-echo 'startup.sh -m standalone' >> nacos-start.sh;
+echo 'sh startup.sh -m standalone' >> nacos-start.sh;
 echo 'echo 'nacos http://127.0.0.1:8848/nacos'' >> nacos-start.sh;
 ```
 
