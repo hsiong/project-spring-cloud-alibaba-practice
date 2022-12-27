@@ -42,4 +42,20 @@ public class OrderApplication {
 
     }
 
+    @Bean
+    @LoadBalanced // 如果RestTemplate上面有这个注解，那么这个RestTemplate调用的远程地址，会走负载均衡器。
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
+    }
+
+    /**
+     * 设置Ribbon的策略
+     * @return
+     */
+    @Bean
+    public IRule myRule(){
+        // 选择一个最小的并发请求的server
+        return new BestAvailableRule();
+    }
+
 }

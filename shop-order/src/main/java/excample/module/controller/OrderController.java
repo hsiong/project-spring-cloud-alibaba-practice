@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -36,15 +35,8 @@ public class OrderController {
         String product = productService.product(pid);
         log.info(">>商品信息,查询结果:" + JSON.toJSONString(product));
         orderService.save(product);
-
-        //模拟一次网络延时
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         return product;
     }
+
 
 }
