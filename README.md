@@ -1,3 +1,33 @@
+- [序言](#序言)
+- [解决问题](#解决问题)
+- [技术选型](#技术选型)
+- [服务治理与负载均衡](#服务治理与负载均衡)
+  - [预备工作](#预备工作)
+  - [用 RestTemplate 改造](#用-resttemplate-改造)
+  - [引入服务治理](#引入服务治理)
+    - [服务注册中心](#服务注册中心)
+      - [服务发现](#服务发现)
+      - [服务配置：](#服务配置)
+      - [服务健康检测](#服务健康检测)
+    - [### 常见的注册中心](#-常见的注册中心)
+    - [使用 Nacos](#使用-nacos)
+      - [使用 docker 搭建 Nacos 环境](#使用-docker-搭建-nacos-环境)
+      - [项目集成 Nacos](#项目集成-nacos)
+  - [实现服务调用中的负载均衡](#实现服务调用中的负载均衡)
+    - [什么是负载均衡](#什么是负载均衡)
+    - [自定义实现负载均衡](#自定义实现负载均衡)
+    - [基于Ribbon实现负载均衡](#基于ribbon实现负载均衡)
+      - [Ribbon支持的负载均衡策略](#ribbon支持的负载均衡策略)
+  - [基于 Feign 实现服务调用](#基于-feign-实现服务调用)
+- [服务容错](#服务容错)
+  - [高并发的问题](#高并发的问题)
+  - [服务雪崩](#服务雪崩)
+  - [服务容错方案](#服务容错方案)
+    - [常见的容错思路](#常见的容错思路)
+    - [常见的容错组件](#常见的容错组件)
+  - [监控 \& 容错 Sentinal](#监控--容错-sentinal)
+    - [Sentinal 基本概念](#sentinal-基本概念)
+    - [Sentinal 重要功能](#sentinal-重要功能)
 
 
 # 序言
@@ -20,6 +50,27 @@
 3. 每个服务都是一个可以独立运行的项目, **没有依赖关系**, 避免服务雪崩(上下游服务的崩溃, 导致整条服务链的崩溃)
 
 ![image](https://user-images.githubusercontent.com/37357447/148908164-33024b85-cf76-405e-93a7-0cc3f17e385c.png)
+
+# 技术选型
+
+|        中间件        |                版本                 |
+| :------------------: | :---------------------------------: |
+|         java         |                 17                  |
+|       encoding       |                utf-8                |
+|        maven         |                3.6.3                |
+|        spring        |           2.3.12.RELEASE            |
+|     spring-cloud     |             Hoxton.SR12             |
+| spring-cloud-alibaba |            2.2.9.RELEASE            |
+|        feign         |            2.2.9.RELEASE            |
+|        nacos         |                2.1.0                |
+|       sentinel       |                1.8.5                |
+|       fastjson       |              任意版本               |
+|        lombok        |              任意版本               |
+|        MySQL         | 5.7(任意版本， 8.0以上需要修改配置) |
+
+m1不兼容:
+https://github.com/alibaba/nacos/issues/9015
+注意: 若未满足版本对应关系， 将会出现各种问题 [spring cloud alibaba 版本对应](https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E)
 
 # 服务治理与负载均衡
 
@@ -84,14 +135,23 @@
 + Nacos  
   Nacos是一个更易于构建云原生应用的动态服务发现、配置管理和服务管理平台。它是Spring Cloud Alibaba组件之一，负责服务注册发现和服务配置，可以这样认为nacos=eureka+conﬁg。
 
-### 使用 Nacos 改造
+### 使用 Nacos 
 
-#### 本地搭建 Nacos 环境
+#### 使用 docker 搭建 Nacos 环境
+```shell
+docker run -d --name nacos-standalone \
+-e MODE=standalone \
+-p 8848:8848 \
+-p 9848:9848 \
+-p 9849:9849 \
+-d nacos/nacos-server:v2.1.0
+```
 
-1. 下载 [Nacos Release](https://github.com/alibaba/nacos/releases)
+> mac m1 chip 改为 **v2.1.0-slim**
 
-2. 启动 Nacos: ```sh startup.sh -m standalone```
-3. 打开浏览器输入[http://localhost:8848/nacos](http://localhost:8848/nacos)，即可访问服务，默认密码是nacos/nacos
+> 若出现 `Client not connected, current status:STARTING`, 请尝试将 Spring Alibaba Version 改为 2.2.6.RELEASE
+>
+> https://www.cnblogs.com/life-x-yk/articles/16186158.html
 
 #### 项目集成 Nacos
 
@@ -300,8 +360,9 @@ public class OrderController {
 
 > 若将feign的依赖单独放在微服务模块中，项目启动时会报 `NoSuchMethodError: com.google.common.collect.Sets$SetView.iterator()Lcom/google/common/collect/UnmodifiableIterator` 异常，猜测是因为feign依赖了ribbon导致
 
-> 若重启过程中， 提示"No Feign Client for LoadBalancing defined.Did you forget to include spring-cloud-starter-Loadbalance"， 请优先修改feign的版本， 使feign的版本与您的spring-cloud-alibaba版本一致。  
-> 请不要用LoadBalancing替换ribbon。在一段时间内， 仅支持轮询策略的Loadbalance还不能替代ribbon。
+> 若重启过程中， 提示"No Feign Client for LoadBalancing defined.Did you forget to include spring-cloud-starter-Loadbalance"， 请优先修改feign的版本，使feign的版本与您的spring-cloud-alibaba版本一致。  
+
+> 请不要用LoadBalancing替换ribbon。在一段时间内，仅支持轮询策略的Loadbalance还不能替代ribbon。
 
 # 服务容错
 
@@ -371,6 +432,14 @@ server:
 
 ![image](https://user-images.githubusercontent.com/37357447/149300154-a1a80124-593f-4cf7-9d58-b2d44130cf18.png)
 
+服务容错的三个核心思想是：
+
++ 不被外界环境影响
++ 不被上游请求压垮
++ 不被下游响应拖垮  
+
+![image](https://user-images.githubusercontent.com/37357447/148924546-1bc740eb-14ab-4016-b8d2-6f7a90f3f8da.png)
+
 ## 服务容错方案
 
 ### 常见的容错思路
@@ -413,17 +482,13 @@ server:
 
 ## 监控 & 容错 Sentinal
 
-1. 安装Sentinel控制台
-
-[下载jar包](https://github.com/alibaba/Sentinel/releases)
-
-2. 启动 Sentinal
+1. docker 启动 sentinal
 
 ```shell
-java -Dserver.port=8060 -Dcsp.sentinel.dashboard.server=localhost:8060 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard-1.8.1.jar
+
 ```
 
-3. 在服务调用(shop-order)集成 Sentinal
+1. 在服务调用(shop-order)集成 Sentinal
 
 > application.yml
 
@@ -465,3 +530,4 @@ spring:
 3. 系统负载保护
    Sentinel同时提供系统维度的自适应保护能力。当系统负载较高的时候，如果还持续让请求进入可能会导致系统崩溃无法响应。在集群环境下，会把本应这台机器承载的流量转发到其它的机器上去。如果这个时候其它的机器也处在一个边缘状态的时候，Sentinel提供了对应的保护机制，让系统的入口流量和系统的负载达到一个平衡，保证系统在能力范围之内处理最多的请求。
 4. 实时统计实现等
+

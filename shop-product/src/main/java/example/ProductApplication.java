@@ -30,7 +30,7 @@ public class ProductApplication {
         String path = "/" + env.getProperty("spring.application.name");
         log.warn("\n----------------------------------------------------------\n\t" +
                  "Application Product-Boot is running! Access URLs:\n\t" +
-                 "Local: \t\thttp://localhost:" + port + path + "/\n\t" +
+                 "Local: \t\thttp://localhost:" + port + "/\n\t" +
                  "----------------------------------------------------------");
 
     }

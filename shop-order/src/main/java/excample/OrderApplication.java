@@ -37,7 +37,7 @@ public class OrderApplication {
         String path = "/" + env.getProperty("spring.application.name");
         log.warn("\n----------------------------------------------------------\n\t" +
                  "Application Order-Boot is running! Access URLs:\n\t" +
-                 "Local: \t\thttp://localhost:" + port + path + "/\n\t" +
+                 "Local: \t\thttp://localhost:" + port + "/\n\t" +
                  "----------------------------------------------------------");
 
     }

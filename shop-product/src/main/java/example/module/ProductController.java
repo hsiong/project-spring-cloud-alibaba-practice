@@ -18,7 +18,7 @@ public class ProductController {
     @GetMapping("/product/{pid}")
     public String product(@PathVariable("pid") String pid) {
         String msg = "商品" + pid;
-        log.info(msg);
+        log.info("获取" + msg);
         return msg;
     }
 

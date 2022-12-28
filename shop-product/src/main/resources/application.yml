@@ -8,8 +8,3 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true
-    username: root
-    password:
