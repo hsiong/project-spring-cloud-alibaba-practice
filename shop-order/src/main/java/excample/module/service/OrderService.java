@@ -10,4 +10,15 @@ public interface OrderService {
 
     void save(String msg);
 
+    /**
+     * sentinel-资源测试方法
+     */
+    String sentinelResourceTest();
+
+    /**
+     * sentinel-链路测试方法
+     * @return
+     */
+    String sentinelLinkTest();
+
 }
