@@ -2,63 +2,63 @@
 - [解决问题](#解决问题)
 - [技术选型](#技术选型)
 - [服务治理与负载均衡](#服务治理与负载均衡)
-  - [预备工作](#预备工作)
-  - [用 RestTemplate 改造](#用-resttemplate-改造)
-  - [引入服务治理](#引入服务治理)
-    - [服务注册中心](#服务注册中心)
-      - [服务发现](#服务发现)
-      - [服务配置：](#服务配置)
-      - [服务健康检测](#服务健康检测)
-    - [常见的注册中心](#常见的注册中心)
-    - [使用 Nacos](#使用-nacos)
-      - [使用 docker 搭建 Nacos 环境](#使用-docker-搭建-nacos-环境)
-      - [项目集成 Nacos](#项目集成-nacos)
-  - [实现服务调用中的负载均衡](#实现服务调用中的负载均衡)
-    - [什么是负载均衡](#什么是负载均衡)
-    - [自定义实现负载均衡](#自定义实现负载均衡)
-    - [基于Ribbon实现负载均衡](#基于ribbon实现负载均衡)
-      - [Ribbon支持的负载均衡策略](#ribbon支持的负载均衡策略)
-  - [基于 Feign 实现服务调用](#基于-feign-实现服务调用)
+    - [预备工作](#预备工作)
+    - [用 RestTemplate 改造](#用-resttemplate-改造)
+    - [引入服务治理](#引入服务治理)
+        - [服务注册中心](#服务注册中心)
+            - [服务发现](#服务发现)
+            - [服务配置：](#服务配置)
+            - [服务健康检测](#服务健康检测)
+        - [常见的注册中心](#常见的注册中心)
+        - [使用 Nacos](#使用-nacos)
+            - [使用 docker 搭建 Nacos 环境](#使用-docker-搭建-nacos-环境)
+            - [项目集成 Nacos](#项目集成-nacos)
+    - [实现服务调用中的负载均衡](#实现服务调用中的负载均衡)
+        - [什么是负载均衡](#什么是负载均衡)
+        - [自定义实现负载均衡](#自定义实现负载均衡)
+        - [基于Ribbon实现负载均衡](#基于ribbon实现负载均衡)
+            - [Ribbon支持的负载均衡策略](#ribbon支持的负载均衡策略)
+    - [基于 Feign 实现服务调用](#基于-feign-实现服务调用)
 - [服务容错](#服务容错)
-  - [高并发的问题](#高并发的问题)
-  - [服务雪崩](#服务雪崩)
-  - [服务容错方案](#服务容错方案)
-    - [常见的容错思路](#常见的容错思路)
-    - [常见的容错组件](#常见的容错组件)
-  - [Sentinal 简介](#sentinal-简介)
-    - [Sentinal 基本概念](#sentinal-基本概念)
-    - [Sentinal 重要功能](#sentinal-重要功能)
-  - [Sentinel 流控规则](#sentinel-流控规则)
-    - [流控模式实战](#流控模式实战)
-    - [@SentinelResource 注解实战](#sentinelresource-注解实战)
-    - [流控模式-直接](#流控模式-直接)
-    - [流控模式-关联](#流控模式-关联)
-    - [流控模式-链路](#流控模式-链路)
-  - [Sentinel 降级规则](#sentinel-降级规则)
-    - [慢调用比例](#慢调用比例)
-    - [异常比例](#异常比例)
-    - [异常数](#异常数)
-  - [Sentinel 热点规则](#sentinel-热点规则)
-    - [热点规则基础](#热点规则基础)
-    - [热点规则高级规则](#热点规则高级规则)
-  - [Sentinel 授权规则](#sentinel-授权规则)
-  - [Sentinel 系统规则](#sentinel-系统规则)
-    - [背景](#背景)
-    - [系统规则概述](#系统规则概述)
-    - [系统规则原理](#系统规则原理)
-    - [系统规则实战](#系统规则实战)
-  - [Sentinel 自定义异常](#sentinel-自定义异常)
-    - [背景](#背景-1)
-    - [实战](#实战)
-  - [Sentinel 规则持久化](#sentinel-规则持久化)
-    - [API 模式：使用客户端规则 API 配置规则](#api-模式使用客户端规则-api-配置规则)
-    - [拉模式：使用文件配置规则](#拉模式使用文件配置规则)
-    - [推模式](#推模式)
-      - [推模式：使用 Nacos 配置规则](#推模式使用-nacos-配置规则)
-      - [推模式：使用 ZooKeeper 配置规则](#推模式使用-zookeeper-配置规则)
-      - [推模式：使用 Apollo 配置规则](#推模式使用-apollo-配置规则)
-      - [推模式：使用 Redis 配置规则](#推模式使用-redis-配置规则)
-    - [规则持久化实战(以 Nacos 为例)](#规则持久化实战以-nacos-为例)
+    - [高并发的问题](#高并发的问题)
+    - [服务雪崩](#服务雪崩)
+    - [服务容错方案](#服务容错方案)
+        - [常见的容错思路](#常见的容错思路)
+        - [常见的容错组件](#常见的容错组件)
+    - [Sentinal 简介](#sentinal-简介)
+        - [Sentinal 基本概念](#sentinal-基本概念)
+        - [Sentinal 重要功能](#sentinal-重要功能)
+    - [Sentinel 流控规则](#sentinel-流控规则)
+        - [流控模式实战](#流控模式实战)
+        - [@SentinelResource 注解实战](#sentinelresource-注解实战)
+        - [流控模式-直接](#流控模式-直接)
+        - [流控模式-关联](#流控模式-关联)
+        - [流控模式-链路](#流控模式-链路)
+    - [Sentinel 降级规则](#sentinel-降级规则)
+        - [慢调用比例](#慢调用比例)
+        - [异常比例](#异常比例)
+        - [异常数](#异常数)
+    - [Sentinel 热点规则](#sentinel-热点规则)
+        - [热点规则基础](#热点规则基础)
+        - [热点规则高级规则](#热点规则高级规则)
+    - [Sentinel 授权规则](#sentinel-授权规则)
+    - [Sentinel 系统规则](#sentinel-系统规则)
+        - [背景](#背景)
+        - [系统规则概述](#系统规则概述)
+        - [系统规则原理](#系统规则原理)
+        - [系统规则实战](#系统规则实战)
+    - [Sentinel 自定义异常](#sentinel-自定义异常)
+        - [背景](#背景-1)
+        - [实战](#实战)
+    - [Sentinel 规则持久化](#sentinel-规则持久化)
+        - [API 模式：使用客户端规则 API 配置规则](#api-模式使用客户端规则-api-配置规则)
+        - [拉模式：使用文件配置规则](#拉模式使用文件配置规则)
+        - [推模式](#推模式)
+            - [推模式：使用 Nacos 配置规则](#推模式使用-nacos-配置规则)
+            - [推模式：使用 ZooKeeper 配置规则](#推模式使用-zookeeper-配置规则)
+            - [推模式：使用 Apollo 配置规则](#推模式使用-apollo-配置规则)
+            - [推模式：使用 Redis 配置规则](#推模式使用-redis-配置规则)
+        - [规则持久化实战(以 Nacos 为例)](#规则持久化实战以-nacos-为例)
 
 
 # 序言
@@ -166,7 +166,7 @@
 + Nacos  
   Nacos是一个更易于构建云原生应用的动态服务发现、配置管理和服务管理平台。它是Spring Cloud Alibaba组件之一，负责服务注册发现和服务配置，可以这样认为nacos=eureka+conﬁg。
 
-### 使用 Nacos 
+### 使用 Nacos
 
 #### 使用 docker 搭建 Nacos 环境
 ```shell
@@ -274,8 +274,8 @@ docker run --name nacos-standalone \
 
 ```java
     @Bean
-    @LoadBalanced // 如果RestTemplate上面有这个注解，那么这个RestTemplate调用的远程地址，会走负载均衡器。
-    public RestTemplate restTemplate() {
+@LoadBalanced // 如果RestTemplate上面有这个注解，那么这个RestTemplate调用的远程地址，会走负载均衡器。
+public RestTemplate restTemplate() {
     return new RestTemplate();
     }
 ```
@@ -284,11 +284,11 @@ docker run --name nacos-standalone \
 
 ```java
 / 通过负载随机从nacos中获取服务地址
-String url = "shop-product";
+    String url = "shop-product";
 
-// 通过restTemplate调用商品微服务
-// 由于restTemplate已经集成@LoadBalanced，那么会自动从注册中心拿到对应的地址
-String product = restTemplate.getForObject("http://" + url + "/product/" + pid，String.class);
+    // 通过restTemplate调用商品微服务
+    // 由于restTemplate已经集成@LoadBalanced，那么会自动从注册中心拿到对应的地址
+    String product = restTemplate.getForObject("http://" + url + "/product/" + pid，String.class);
 ```
 
 #### Ribbon支持的负载均衡策略
@@ -311,13 +311,13 @@ Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为co
 
 ```java
     /**
-     * 设置Ribbon的策略
-     * @return
-     */
-    @Bean
-    public IRule myRule(){
-        // 选择一个最小的并发请求的server
-        return new BestAvailableRule();
+ * 设置Ribbon的策略
+ * @return
+ */
+@Bean
+public IRule myRule(){
+    // 选择一个最小的并发请求的server
+    return new BestAvailableRule();
     }
 ```
 
@@ -392,7 +392,7 @@ public class OrderController {
 
 > 若将feign的依赖单独放在微服务模块中，项目启动时会报 `NoSuchMethodError: com.google.common.collect.Sets$SetView.iterator()Lcom/google/common/collect/UnmodifiableIterator` 异常，猜测是因为feign依赖了ribbon导致
 
-> 若重启过程中， 提示"No Feign Client for LoadBalancing defined.Did you forget to include spring-cloud-starter-Loadbalance"， 请优先修改feign的版本，使feign的版本与您的spring-cloud-alibaba版本一致。  
+> 若重启过程中， 提示"No Feign Client for LoadBalancing defined.Did you forget to include spring-cloud-starter-Loadbalance"， 请优先修改feign的版本，使feign的版本与您的spring-cloud-alibaba版本一致。
 
 > 请不要用LoadBalancing替换ribbon。在一段时间内，仅支持轮询策略的Loadbalance还不能替代ribbon。
 
@@ -441,10 +441,10 @@ public class OrderController {
 2. 修改配置文件中tomcat的并发数
 ```java
 server:
-  port: 8091
-  tomcat:
+    port: 8091
+    tomcat:
     threads:
-      max: 50 #tomcat的最大并发值修改为50，默认是200
+    max: 50 #tomcat的最大并发值修改为50，默认是200
 ```
 3. 使用jmeter进行压力测试  
    [Jmeter下载地址](https://jmeter.apache.org/downLoad_jmeter.cgi)  
@@ -468,7 +468,7 @@ server:
 
 + 不被外界环境影响
 + 不被上游请求压垮
-+ 不被下游响应拖垮  
++ 不被下游响应拖垮
 
 ![image](https://user-images.githubusercontent.com/37357447/148924546-1bc740eb-14ab-4016-b8d2-6f7a90f3f8da.png)
 
@@ -529,16 +529,16 @@ docker run --name sentinel -p 8858:8858 -d royalwang/sentinel-dashboard
 
 ```java
 spring:
-  application:
+    application:
     name: shop-order
-  cloud:
+    cloud:
     nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
+    discovery:
+    server-addr: 127.0.0.1:8848
     sentinel:
-      transport:
-        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
-        dashboard: Sentinal-ip:Sentinal-port # 指定控制台服务的地址
+    transport:
+    port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+    dashboard: Sentinal-ip:Sentinal-port # 指定控制台服务的地址
 ```
 
 3. 在需要流控的服务调用方 shop-order, 新增OrderSentinelController
@@ -592,24 +592,24 @@ public class OrderSentinelController {
 + Sentinel本身是一个流量监控服务，需要有对应微服务的接口访问，才会在控制台中显示。
 + 流控规则在Sentinel重启或者微服务重启有可能会被删除，以后会有专门的章节([Sentinal规则持久化](#sentinal规则持久化))来介绍流控规则的持久化配置。
 
-点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下  
+点击簇点链路，我们就可以看到访问过的接口地址，然后点击对应的流控按钮，进入流控规则配置页面。新增流控规则界面如下
 
 ![image](https://user-images.githubusercontent.com/37357447/149312642-cb3fb7ee-f212-44dd-87bf-615b9fa5b0a2.png)
 
 + 资源名(：需要限制的请求路径、方法等等
-+ 针对来源：指定对哪个微服务进行限流，指default，意思是不区分来源，全部限制  
++ 针对来源：指定对哪个微服务进行限流，指default，意思是不区分来源，全部限制
 + 阈值类型/单机阈值：
     + QPS(每秒请求数量)：当调用该接口的QPS达到阈值的时候，进行限流
     + 线程数：当调用该接口的线程数达到阈值的时候，进行限流
 + 是否集群：暂不需要集群
 + 流控模式：sentinel共有三种流控模式，分别是：
-  + 直接(默认)：资源达到限流条件时，开启限流
-  + 关联：当关联的资源达到限流条件时，开启限流[当接口A达到限流阈值时, 接口B也限流]
-  + 链路：面向service层用@SentinelResource("xxx")标记的资源，当从某个接口过来的资源达到限流条件时，开启限流(一般来说，该配置不常用)
+    + 直接(默认)：资源达到限流条件时，开启限流
+    + 关联：当关联的资源达到限流条件时，开启限流[当接口A达到限流阈值时, 接口B也限流]
+    + 链路：面向service层用@SentinelResource("xxx")标记的资源，当从某个接口过来的资源达到限流条件时，开启限流(一般来说，该配置不常用)
 + 流控效果:
-  + 快速失败(默认): 直接失败，抛出异常，不做任何额外的处理，是最简单的效果
-  + Warm Up：它从开始阈值到最大QPS阈值会有一个缓冲阶段，一开始的阈值是最大QPS阈值的1/3 ，然后慢慢增长，直到最大阈值，适用于将突然增大的流量转换为缓步增长的场景
-  + 排队等待：让请求以均匀的速度通过，单机阈值为每秒通过数量，其余的排队等待.它还会让设置一个超时时间，当请求超过超时间时间还未处理，则会被丢弃。
+    + 快速失败(默认): 直接失败，抛出异常，不做任何额外的处理，是最简单的效果
+    + Warm Up：它从开始阈值到最大QPS阈值会有一个缓冲阶段，一开始的阈值是最大QPS阈值的1/3 ，然后慢慢增长，直到最大阈值，适用于将突然增大的流量转换为缓步增长的场景
+    + 排队等待：让请求以均匀的速度通过，单机阈值为每秒通过数量，其余的排队等待.它还会让设置一个超时时间，当请求超过超时间时间还未处理，则会被丢弃。
 
 资料参考:
 
@@ -742,18 +742,18 @@ public class OrderSentinelController {
 
 ```java
     @SentinelResource(value = "sentinelLinkTest", blockHandler = "tipHandler")
-    @Override
-    public String sentinelLinkTest() {
-        String msg = "sentinel-link-test";
-        log.info(msg);
-        return msg;
+@Override
+public String sentinelLinkTest() {
+    String msg = "sentinel-link-test";
+    log.info(msg);
+    return msg;
     }
 
-    /**blockHandler 函数会在原方法被限流/降级/系统保护的时候调用*****/
-    public static String tipHandler(BlockException be) {
-        String msg = "您访问的太频繁了，请稍后再试！";
-        log.warn(msg);
-        return msg;
+/**blockHandler 函数会在原方法被限流/降级/系统保护的时候调用*****/
+public static String tipHandler(BlockException be) {
+    String msg = "您访问的太频繁了，请稍后再试！";
+    log.warn(msg);
+    return msg;
     }
 
 ```
@@ -799,12 +799,12 @@ public class OrderSentinelController {
 
 ```java
 spring:
-  cloud:
+    cloud:
     sentinel:
-      transport:
-        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
-        dashboard: localhost:8058 # 指定控制台服务的地址
-      web-context-unify: false # 关闭context整合
+    transport:
+    port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+    dashboard: localhost:8058 # 指定控制台服务的地址
+    web-context-unify: false # 关闭context整合
 ```
 
 2. 配置链路规则如下
@@ -824,44 +824,44 @@ spring:
 ```java
     /*********************** 降级规则测试 ***************************/
 
-    /**
-     * 慢调用比例(RT)测试
-     * @return
-     * @throws InterruptedException
-     */
-    @GetMapping("slowRequestRadio")
-    public String slowRequestRadio() throws InterruptedException {
-        double random = Math.random();
-        if (random > 0.5) {
-            Thread.sleep(2000);
-        }
-        return "slowRequestRadio";
+/**
+ * 慢调用比例(RT)测试
+ * @return
+ * @throws InterruptedException
+ */
+@GetMapping("slowRequestRadio")
+public String slowRequestRadio() throws InterruptedException {
+    double random = Math.random();
+    if (random > 0.5) {
+    Thread.sleep(2000);
+    }
+    return "slowRequestRadio";
     }
 
-    /**
-     * 异常比例测试
-     * @return
-     */
-    @GetMapping("errorRadio")
-    public String errorRadio() {
-        double random = Math.random();
-        if (random > 0.5) {
-            throw new IllegalArgumentException("error");
-        }
-        return "errorRadio";
+/**
+ * 异常比例测试
+ * @return
+ */
+@GetMapping("errorRadio")
+public String errorRadio() {
+    double random = Math.random();
+    if (random > 0.5) {
+    throw new IllegalArgumentException("error");
+    }
+    return "errorRadio";
     }
 
-    /**
-     * 异常数测试
-     * @return
-     */
-    @GetMapping("errorCount")
-    public String errorCount() {
-        double random = Math.random();
-        if (random > 0.5) {
-            throw new IllegalArgumentException("error");
-        }
-        return "errorCount";
+/**
+ * 异常数测试
+ * @return
+ */
+@GetMapping("errorCount")
+public String errorCount() {
+    double random = Math.random();
+    if (random > 0.5) {
+    throw new IllegalArgumentException("error");
+    }
+    return "errorCount";
     }
 ```
 
@@ -916,28 +916,28 @@ spring:
 ```java
     /*********************** 热点规则测试 ***************************/
 
-    /**
-     * 热点规则测试
-     * 热点参数限流对默认的SpringMVC资源无效
-     *
-     * @return
-     */
-    @GetMapping("paramBlock")
-    @SentinelResource(value = "paramBlock", blockHandler = "paramBlockHandler")
-    public String paramBlock(@RequestParam(name = "param", required = false) String param,
-                             @RequestParam(name = "index", required = false) Integer index) {
-        return "paramBlock";
+/**
+ * 热点规则测试
+ * 热点参数限流对默认的SpringMVC资源无效
+ *
+ * @return
+ */
+@GetMapping("paramBlock")
+@SentinelResource(value = "paramBlock", blockHandler = "paramBlockHandler")
+public String paramBlock(@RequestParam(name = "param", required = false) String param,
+@RequestParam(name = "index", required = false) Integer index) {
+    return "paramBlock";
     }
 
-    public String paramBlockHandler(String param, Integer index, BlockException ex) {
-        throw new IllegalArgumentException();
+public String paramBlockHandler(String param, Integer index, BlockException ex) {
+    throw new IllegalArgumentException();
     }
 ```
 
 2. 配置如图, 我们在这里设置对 param 参数进行限流控制
-   + 参数索引: 对第几个参数做限流控制, 类似数组, 从0开始, 参数索引0代表接口中的第1个参数
-   + 单机阈值: QPS
-   + 统计窗口时长: 单元统计时长
+    + 参数索引: 对第几个参数做限流控制, 类似数组, 从0开始, 参数索引0代表接口中的第1个参数
+    + 单机阈值: QPS
+    + 统计窗口时长: 单元统计时长
 
 > 注意: 热点参数限流对默认的SpringMVC资源无效(即对接口地址等无效), 仅对`@SentinelResource`标记的资源生效
 
@@ -957,8 +957,8 @@ spring:
 当我们期望第一个参数当它是某个特殊值时，它的限流值和平时不一样，假如当p1的值等于5时，它的阈值可以达到200，这种参数例外的情况，我们就使用到了热点配置的高级属性。
 
 1. 配置如图
-   + 参数值: 当参数的值为该值时, 进行限流
-   + 注意: 此处的参数类型只能为基本类型和String类型。
+    + 参数值: 当参数的值为该值时, 进行限流
+    + 注意: 此处的参数类型只能为基本类型和String类型。
 
 
 ![image](https://user-images.githubusercontent.com/37357447/149736479-e28b2f4e-0d07-4d82-9218-75decc707db3.png)
@@ -973,8 +973,8 @@ spring:
 + 授权应用:  授权应用的名称由`RequestOriginParser`确定
 + 资源名: 以`@SentinelResource`定义的资源
 + 授权类型:
-  + 若配置白名单，则只有请求来源位于白名单内时才可通过
-  + 若配置黑名单，则请求来源位于黑名单时不通过，其余的请求通过
+    + 若配置白名单，则只有请求来源位于白名单内时才可通过
+    + 若配置黑名单，则请求来源位于黑名单时不通过，其余的请求通过
 
 1. 新增`RequestOriginParserDefinition`用于定义授权应用名
 
@@ -1026,7 +1026,7 @@ Sentinel 在系统自适应保护的做法是，用 `Load` 作为启动自适应
 
 ### 系统规则概述
 
-系统保护规则是从应用级别的入口流量进行控制，从单台机器的`总体Load`、`RT`、`入口QPS`、`CPU使用率`和`线程数`五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。  
+系统保护规则是从应用级别的入口流量进行控制，从单台机器的`总体Load`、`RT`、`入口QPS`、`CPU使用率`和`线程数`五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。
 
 + Load(仅对 Linux/Unix-like 机器生效)：当系统Load1超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。
   系统容量由系统的 maxQps * minRt 计算得出。设定参考值一般是CPU cores * 2.5。
@@ -1044,11 +1044,11 @@ Sentinel 在系统自适应保护的做法是，用 `Load` 作为启动自适应
 我们把系统处理请求的过程想象为一个水管，到来的请求是往这个水管灌水，当系统处理顺畅的时候，请求不需要排队，直接从水管中穿过，这个请求的RT是最短的；反之，当请求堆积的时候，那么处理请求的时间则会变为：排队时间 + 最短处理时间。
 
 1. 推论一:
-   + 如果我们能够保证水管里的水量，能够让水顺畅的流动，则不会增加排队的请求；也就是说，这个时候的系统负载不会进一步恶化。我们用 T 来表示系统处理容量，用 RT 来表示请求的处理时间，用 P 来表示进来的请求数，那么一个请求从进入水管道到从水管出来，这个水管会需要 P * RT 的容量。换一句话来说，`当 T ≈ QPS * Avg(RT) 的时候，我们可以认为系统的处理能力和允许进入的请求个数达到了平衡，系统的负载不会进一步恶化。`
-   + 接下来的问题是，水管的水位是可以达到了一个平衡点，但是这个平衡点只能保证水管的水位不再继续增高，但是还面临一个问题，就是在达到平衡点之前，这个水管里已经堆积了多少水。`如果之前水管的水已经在一个量级了，那么这个时候系统允许通过的水量可能只能缓慢通过，RT会大，之前堆积在水管里的水会滞留；反之，如果之前的水管水位偏低，那么又会浪费了系统的处理能力`。
+    + 如果我们能够保证水管里的水量，能够让水顺畅的流动，则不会增加排队的请求；也就是说，这个时候的系统负载不会进一步恶化。我们用 T 来表示系统处理容量，用 RT 来表示请求的处理时间，用 P 来表示进来的请求数，那么一个请求从进入水管道到从水管出来，这个水管会需要 P * RT 的容量。换一句话来说，`当 T ≈ QPS * Avg(RT) 的时候，我们可以认为系统的处理能力和允许进入的请求个数达到了平衡，系统的负载不会进一步恶化。`
+    + 接下来的问题是，水管的水位是可以达到了一个平衡点，但是这个平衡点只能保证水管的水位不再继续增高，但是还面临一个问题，就是在达到平衡点之前，这个水管里已经堆积了多少水。`如果之前水管的水已经在一个量级了，那么这个时候系统允许通过的水量可能只能缓慢通过，RT会大，之前堆积在水管里的水会滞留；反之，如果之前的水管水位偏低，那么又会浪费了系统的处理能力`。
 
 1. 推论二:
-   + 当保持入口的流量是水管出来的流量的最大的值的时候，可以最大利用水管的处理能力。然而，和 TCP BBR 的不一样的地方在于，还需要用一个系统负载的值（load）来激发这套机制启动。
+    + 当保持入口的流量是水管出来的流量的最大的值的时候，可以最大利用水管的处理能力。然而，和 TCP BBR 的不一样的地方在于，还需要用一个系统负载的值（load）来激发这套机制启动。
 
 注：这种系统自适应算法对于低 load 的请求，它的效果是一个“兜底”的角色。对于不是应用本身造成的 load 高的情况（如其它进程导致的不稳定的情况），效果不明显。
 
@@ -1068,9 +1068,9 @@ Sentinel 在系统自适应保护的做法是，用 `Load` 作为启动自适应
 
 + Sentinel一旦发生流控, 默认都会返回`Block by Sentinel (flow limiting)`, 这对我们的实际开发是非常不利的
 + 虽然可以用`blockHandler=xxx`指定兜底函数, 但是有以下问题
-  + 仅对`@SentinelResource`标记的资源有用
-  + 需要每个方法分别指定, 十分麻烦
-  + 不支持系统规则流控
+    + 仅对`@SentinelResource`标记的资源有用
+    + 需要每个方法分别指定, 十分麻烦
+    + 不支持系统规则流控
 
 这样, 我们就在想, 有没有一种办法, 能够像java的`全局异常处理`一样, 在某个地方统一处理 Sentinel 流控后的结果, 返回我们自定义的结果?
 于是, 我们引入了Sentinel自定义异常`BlockExceptionHandler`
@@ -1152,18 +1152,18 @@ public class ExceptionHandler {
 
 ```java
     /*********************** 自定义规则测试 ***************************/
-    
-    @GetMapping("exception")
-    @SentinelResource(value = "exception")
-    public String exception() throws BlockException {
-        return "paramBlock ";
+
+@GetMapping("exception")
+@SentinelResource(value = "exception")
+public String exception() throws BlockException {
+    return "paramBlock ";
     }
 
-    /*********************** 自定义规则测试 ***************************/
-    
-    @GetMapping("exception2")
-    public String exception() throws BlockException {
-        return "paramBlock ";
+/*********************** 自定义规则测试 ***************************/
+
+@GetMapping("exception2")
+public String exception() throws BlockException {
+    return "paramBlock ";
     }
 ```
 
@@ -1185,7 +1185,7 @@ public class ExceptionHandler {
 
 
 
-在前文提过, 虽然我们可以直接通过 Sentinel-Dashboard 来为每个 Sentinel 客户端设置各种各样的规则, 但是这些规则默认是存放在内存中，极不稳定, 而且当微服务重启后, 对应的规则就丢失了, 那么有没有一种办法, 让这些规则持久化呢?   
+在前文提过, 虽然我们可以直接通过 Sentinel-Dashboard 来为每个 Sentinel 客户端设置各种各样的规则, 但是这些规则默认是存放在内存中，极不稳定, 而且当微服务重启后, 对应的规则就丢失了, 那么有没有一种办法, 让这些规则持久化呢?
 
 Sentinel 的理念是开发者只需要关注资源的定义，当资源定义成功后可以动态增加各种流控降级规则。Sentinel 提供两种方式修改规则：
 
@@ -1229,7 +1229,7 @@ alibaba 官方推荐**通过控制台设置规则后将规则推送到统一的�
 </dependency>
 ```
 
-示例如下: 
+示例如下:
 
 ```java
 /**
@@ -1297,11 +1297,11 @@ public class FileDataSourceDemo {
     }
 
     private Converter<String, List<FlowRule>> flowRuleListParser = source -> JSON.parseObject(source,
-        new TypeReference<List<FlowRule>>() {});
+                                                                                              new TypeReference<List<FlowRule>>() {});
     private Converter<String, List<DegradeRule>> degradeRuleListParser = source -> JSON.parseObject(source,
-        new TypeReference<List<DegradeRule>>() {});
+                                                                                                    new TypeReference<List<DegradeRule>>() {});
     private Converter<String, List<SystemRule>> systemRuleListParser = source -> JSON.parseObject(source,
-        new TypeReference<List<SystemRule>>() {});
+                                                                                                  new TypeReference<List<SystemRule>>() {});
 }
 ```
 
@@ -1326,7 +1326,7 @@ Nacos 是阿里中间件团队开源的服务发现和动态配置中心。Senti
 // groupId 和 dataId 对应 Nacos 中相应配置
 ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new NacosDataSource<>(remoteAddress, groupId, dataId,
     source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
-FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+    FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
 ```
 
 注意：如果希望初始化 Nacos 数据源时携带更多的配置（如鉴权配置），可通过带 Properties 的构造函数进行传入。
@@ -1351,7 +1351,7 @@ Sentinel 针对 ZooKeeper 作了相应适配，底层可以采用 ZooKeeper 作�
 // remoteAddress 代表 ZooKeeper 服务端的地址
 // path 对应 ZK 中的数据路径
 ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new ZookeeperDataSource<>(remoteAddress, path, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
-FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+    FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
 ```
 
 详细示例可以参见 [sentinel-demo-zookeeper-datasource](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-zookeeper-datasource)。
@@ -1375,7 +1375,7 @@ Sentinel 针对 [Apollo](https://github.com/ctripcorp/apollo) 作了相应适配
 // ruleKey 对应规则存储的 key
 // defaultRules 对应连接不上 Apollo 时的默认规则
 ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new ApolloDataSource<>(namespaceName, ruleKey, defaultRules, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
-FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+    FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
 ```
 
 详细示例可以参见 [sentinel-demo-apollo-datasource](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-apollo-datasource)。
@@ -1397,7 +1397,7 @@ Redis 动态配置源采用 Redis PUB-SUB 机制实现，详细文档参考：ht
 
 ### 规则持久化实战(以 Nacos 为例)
 
-参考资料: 
+参考资料:
 
 + [Sentinel使用Nacos存储规则](https://developer.aliyun.com/article/698565)
 
@@ -1438,62 +1438,62 @@ Nacos 是阿里中间件团队开源的服务发现和动态配置中心。Senti
 
 3. 登录 nacos -> configurationManagement -> Configuration -> + add new Rule, 参数可参考 [规则 API](https://github.com/alibaba/Sentinel/wiki/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8#%E8%A7%84%E5%88%99%E7%9A%84%E7%A7%8D%E7%B1%BB)
 
-     + 流量控制规则 (FlowRule)
+    + 流量控制规则 (FlowRule)
 
-       | Field           | 说明                                                         | 默认值                                          |
-       | --------------- | ------------------------------------------------------------ | ----------------------------------------------- |
-       | resource        | 资源名，资源名是限流规则的作用对象                           |                                                 |
-       | count           | 限流阈值                                                     |                                                 |
-       | grade           | 限流阈值类型，QPS 模式（1）或并发线程数模式（0）             | QPS 模式, RuleConstant.FLOW_GRADE_QPS           |
-       | limitApp        | 流控针对的调用来源                                           | `default`，代表不区分调用来源                   |
-       | strategy        | 调用关系限流策略：直接、链路、关联                           | 根据资源本身（直接）RuleConstant.STRATEGY_CHAIN |
-       | controlBehavior | 流控效果（直接拒绝/WarmUp/匀速+排队等待），不支持按调用关系限流 | 直接拒绝RuleConstant.CONTROL_BEHAVIOR_DEFAULT   |
-       | clusterMode     | 是否集群限流                                                 | 否                                              |
-       
-     + 熔断降级规则 (DegradeRule)
+      | Field           | 说明                                                            | 默认值                                          |
+             | --------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+      | resource        | 资源名，资源名是限流规则的作用对象                              |                                                 |
+      | count           | 限流阈值                                                        |                                                 |
+      | grade           | 限流阈值类型，QPS 模式（1）或并发线程数模式（0）                | QPS 模式, RuleConstant.FLOW_GRADE_QPS           |
+      | limitApp        | 流控针对的调用来源                                              | `default`，代表不区分调用来源                   |
+      | strategy        | 调用关系限流策略：直接、链路、关联                              | 根据资源本身（直接）RuleConstant.STRATEGY_CHAIN |
+      | controlBehavior | 流控效果（直接拒绝/WarmUp/匀速+排队等待），不支持按调用关系限流 | 直接拒绝RuleConstant.CONTROL_BEHAVIOR_DEFAULT   |
+      | clusterMode     | 是否集群限流                                                    | 否                                              |
 
-       | Field              | 说明                                                         | 默认值                                  |
-       | ------------------ | ------------------------------------------------------------ | --------------------------------------- |
-       | resource           | 资源名，即规则的作用对象                                     |                                         |
-       | grade              | 熔断策略，支持慢调用比例/异常比例/异常数策略                 | 慢调用比例RuleConstant.DEGRADE_GRADE_RT |
-       | count              | 慢调用比例模式下为慢调用临界 RT（超出该值计为慢调用）；异常比例/异常数模式下为对应的阈值 |                                         |
-       | timeWindow         | 熔断时长，单位为 s                                           |                                         |
-       | minRequestAmount   | 熔断触发的最小请求数，请求数小于该值时即使异常比率超出阈值也不会熔断（1.7.0 引入） | 5                                       |
-       | statIntervalMs     | 统计时长（单位为 ms），如 60*1000 代表分钟级（1.8.0 引入）   | 1000 ms                                 |
-       | slowRatioThreshold | 慢调用比例阈值，仅慢调用比例模式有效（1.8.0 引入）           |                                         |
+    + 熔断降级规则 (DegradeRule)
 
-   + 热点参数规则
-   
-     | 属性              | 说明                                                         | 默认值   |
-     | ----------------- | ------------------------------------------------------------ | -------- |
-     | resource          | 资源名，必填                                                 |          |
-     | count             | 限流阈值，必填                                               |          |
-     | grade             | 限流模式                                                     | QPS 模式 |
-     | durationInSec     | 统计窗口时间长度（单位为秒），1.6.0 版本开始支持             | 1s       |
-     | controlBehavior   | 流控效果（支持快速失败和匀速排队模式），1.6.0 版本开始支持   | 快速失败 |
-     | maxQueueingTimeMs | 最大排队等待时长（仅在匀速排队模式生效），1.6.0 版本开始支持 | 0ms      |
-     | paramIdx          | 热点参数的索引，必填，对应 `SphU.entry(xxx, args)` 中的参数索引位置 |          |
-     | paramFlowItemList | 参数例外项，可以针对指定的参数值单独设置限流阈值，不受前面 `count` 阈值的限制。**仅支持基本类型和字符串类型** |          |
-     | clusterMode       | 是否是集群参数流控规则                                       | `false`  |
-     | clusterConfig     | 集群流控相关配置                                             |          |
-     
-   + 系统保护规则 (SystemRule)
-   
-     | Field             | 说明                                   | 默认值      |
-     | ----------------- | -------------------------------------- | ----------- |
-     | highestSystemLoad | `load1` 触发值，用于触发自适应控制阶段 | -1 (不生效) |
-     | avgRt             | 所有入口流量的平均响应时间             | -1 (不生效) |
-     | maxThread         | 入口流量的最大并发数                   | -1 (不生效) |
-     | qps               | 所有入口资源的 QPS                     | -1 (不生效) |
-     | highestCpuUsage   | 当前系统的 CPU 使用率（0.0-1.0）       | -1 (不生效) |
+      | Field              | 说明                                                                                     | 默认值                                  |
+             | ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------- |
+      | resource           | 资源名，即规则的作用对象                                                                 |                                         |
+      | grade              | 熔断策略，支持慢调用比例/异常比例/异常数策略                                             | 慢调用比例RuleConstant.DEGRADE_GRADE_RT |
+      | count              | 慢调用比例模式下为慢调用临界 RT（超出该值计为慢调用）；异常比例/异常数模式下为对应的阈值 |                                         |
+      | timeWindow         | 熔断时长，单位为 s                                                                       |                                         |
+      | minRequestAmount   | 熔断触发的最小请求数，请求数小于该值时即使异常比率超出阈值也不会熔断（1.7.0 引入）       | 5                                       |
+      | statIntervalMs     | 统计时长（单位为 ms），如 60*1000 代表分钟级（1.8.0 引入）                               | 1000 ms                                 |
+      | slowRatioThreshold | 慢调用比例阈值，仅慢调用比例模式有效（1.8.0 引入）                                       |                                         |
 
-   + 访问控制规则 (AuthorityRule)
-   
-     - `resource`：资源名，即规则的作用对象
-   
-     - `limitApp`：对应的黑名单/白名单，不同 origin 用 `,` 分隔，如 `appA,appB`
-   
-     - `strategy`：限制模式，Mode: 0 for whitelist; 1 for blacklist.
+    + 热点参数规则
+
+      | 属性              | 说明                                                                                                          | 默认值   |
+           | ----------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
+      | resource          | 资源名，必填                                                                                                  |          |
+      | count             | 限流阈值，必填                                                                                                |          |
+      | grade             | 限流模式                                                                                                      | QPS 模式 |
+      | durationInSec     | 统计窗口时间长度（单位为秒），1.6.0 版本开始支持                                                              | 1s       |
+      | controlBehavior   | 流控效果（支持快速失败和匀速排队模式），1.6.0 版本开始支持                                                    | 快速失败 |
+      | maxQueueingTimeMs | 最大排队等待时长（仅在匀速排队模式生效），1.6.0 版本开始支持                                                  | 0ms      |
+      | paramIdx          | 热点参数的索引，必填，对应 `SphU.entry(xxx, args)` 中的参数索引位置                                           |          |
+      | paramFlowItemList | 参数例外项，可以针对指定的参数值单独设置限流阈值，不受前面 `count` 阈值的限制。**仅支持基本类型和字符串类型** |          |
+      | clusterMode       | 是否是集群参数流控规则                                                                                        | `false`  |
+      | clusterConfig     | 集群流控相关配置                                                                                              |          |
+
+    + 系统保护规则 (SystemRule)
+
+      | Field             | 说明                                   | 默认值      |
+           | ----------------- | -------------------------------------- | ----------- |
+      | highestSystemLoad | `load1` 触发值，用于触发自适应控制阶段 | -1 (不生效) |
+      | avgRt             | 所有入口流量的平均响应时间             | -1 (不生效) |
+      | maxThread         | 入口流量的最大并发数                   | -1 (不生效) |
+      | qps               | 所有入口资源的 QPS                     | -1 (不生效) |
+      | highestCpuUsage   | 当前系统的 CPU 使用率（0.0-1.0）       | -1 (不生效) |
+
+    + 访问控制规则 (AuthorityRule)
+
+        - `resource`：资源名，即规则的作用对象
+
+        - `limitApp`：对应的黑名单/白名单，不同 origin 用 `,` 分隔，如 `appA,appB`
+
+        - `strategy`：限制模式，Mode: 0 for whitelist; 1 for blacklist.
 
 示例如下图
 
