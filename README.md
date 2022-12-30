@@ -51,6 +51,14 @@
     - [背景](#背景-1)
     - [实战](#实战)
   - [Sentinel 规则持久化](#sentinel-规则持久化)
+    - [API 模式：使用客户端规则 API 配置规则](#api-模式使用客户端规则-api-配置规则)
+    - [拉模式：使用文件配置规则](#拉模式使用文件配置规则)
+    - [推模式](#推模式)
+      - [推模式：使用 Nacos 配置规则](#推模式使用-nacos-配置规则)
+      - [推模式：使用 ZooKeeper 配置规则](#推模式使用-zookeeper-配置规则)
+      - [推模式：使用 Apollo 配置规则](#推模式使用-apollo-配置规则)
+      - [推模式：使用 Redis 配置规则](#推模式使用-redis-配置规则)
+    - [规则持久化实战(以 Nacos 为例)](#规则持久化实战以-nacos-为例)
 
 
 # 序言
@@ -76,23 +84,23 @@
 
 # 技术选型
 
-|        中间件        |                版本                 |
-| :------------------: | :---------------------------------: |
-|         java         |                 17                  |
-|       encoding       |                utf-8                |
-|        maven         |                3.6.3                |
-|        spring        |           2.3.12.RELEASE            |
-|     spring-cloud     |             Hoxton.SR12             |
-| spring-cloud-alibaba |            2.2.9.RELEASE            |
-|        feign         |            2.2.9.RELEASE            |
-|        nacos         |                2.1.0                |
-|       sentinel       |                1.8.4                |
-|       fastjson       |              任意版本               |
-|        lombok        |              任意版本               |
-|        MySQL         | 5.7(任意版本， 8.0以上需要修改配置) |
+|          中间件           |      版本      |
+| :-----------------------: | :------------: |
+|           java            |       17       |
+|         encoding          |     utf-8      |
+|           maven           |     3.6.3      |
+|         fastjson          |    任意版本    |
+|          lombok           |    任意版本    |
+|          spring           | 2.3.12.RELEASE |
+|       spring-cloud        |  Hoxton.SR12   |
+|   spring-cloud-alibaba    | 2.2.9.RELEASE  |
+|           feign           | 2.2.9.RELEASE  |
+|           nacos           |     2.1.0      |
+|         sentinel          |     1.8.4      |
+| sentinel-datasource-nacos |     1.8.4      |
 
-m1不兼容:
-https://github.com/alibaba/nacos/issues/9015
+<! -- vscode 格式化 -->
+
 注意: 若未满足版本对应关系， 将会出现各种问题 [spring cloud alibaba 版本对应](https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E)
 
 # 服务治理与负载均衡
@@ -289,15 +297,15 @@ Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为co
 
 ![image](https://user-images.githubusercontent.com/37357447/149099393-949b8855-c90b-43dd-aa77-6e1545f7bcb4.png)
 
-|          策略名           |                           策略描述                           |                           实现说明                           |
-| :-----------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|         RetryRule         |               对选定的负载均衡策略加上重试机制               | [负载均衡策略之ROUNDROBINRULE和RETRYRULE源码解读](https://www.freesion.com/article/9980145836/) |
-|      RoundRobinRule       |                轮询规则: 每次都取下一个服务器                |             轮询index，选择index对应位置的server             |
-| WeightedResponseTimeRule  | 加权规则: 根据相应时间分配一个weight，server的响应时间越长，weight越小，被选中的可能性越低 | 开始的时候还没有权重列表，采用父类的轮询方式，有一个默认每30秒更新一次权重列表的定时任务，该定时任务会根据实例的响应时间来更新权重列表，choose方法做的事情就是，用一个(0，1)的随机double数乘以最大的权重得到randomWeight，然后遍历权重列表，找出第一个比randomWeight大的实例下标，然后返回该实例[负载均衡策略之WEIGHTEDRESPONSETIMERULE源码解读](https://www.freesion.com/article/3613148138/) |
-| AvailabilityFilteringRule | 先过滤出故障的或并发请求大于阈值的服务实例，再以线性轮询的方式从过滤后的实例清单中选出一个 | [RIBBON过滤器AVAILABILITYFILTERINGRULE源码解读](https://www.freesion.com/article/1707151963/) |
-|     BestAvailableRule     |                选择一个最小的并发请求的server                | [RIBBON源码之BESTAVAILABLERULE解读](https://www.freesion.com/article/4064150697/) |
-|        RandomRule         |                 随机规则: 随机选择一个server                 |      随机选择一个数作为index，选择index对应位置的server      |
-|     ZoneAvoidanceRule     | Ribbon默认规则: 先使用主过滤条件(区域负载器，选择最优区域)对所有实例过滤并返回过滤后的实例清单，依次使用次过滤条件列表中的过滤条件对主过滤条件的结果进行过滤，判断最小过滤数(默认1)和最小过滤百分比(默认0)，最后对满足条件的服务器则使用RoundRobinRule(轮询方式)选择一个服务器实例 | [RIBBON过滤器ZONEAVOIDANCERULE源码解读](https://www.freesion.com/article/5359151961/) |
+|          策略名           |                                                                                                                                      策略描述                                                                                                                                      |                                                                                                                                                                                            实现说明                                                                                                                                                                                            |
+| :-----------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|         RetryRule         |                                                                                                                          对选定的负载均衡策略加上重试机制                                                                                                                          |                                                                                                                                                [负载均衡策略之ROUNDROBINRULE和RETRYRULE源码解读](https://www.freesion.com/article/9980145836/)                                                                                                                                                 |
+|      RoundRobinRule       |                                                                                                                           轮询规则: 每次都取下一个服务器                                                                                                                           |                                                                                                                                                                              轮询index，选择index对应位置的server                                                                                                                                                                              |
+| WeightedResponseTimeRule  |                                                                                             加权规则: 根据相应时间分配一个weight，server的响应时间越长，weight越小，被选中的可能性越低                                                                                             | 开始的时候还没有权重列表，采用父类的轮询方式，有一个默认每30秒更新一次权重列表的定时任务，该定时任务会根据实例的响应时间来更新权重列表，choose方法做的事情就是，用一个(0，1)的随机double数乘以最大的权重得到randomWeight，然后遍历权重列表，找出第一个比randomWeight大的实例下标，然后返回该实例[负载均衡策略之WEIGHTEDRESPONSETIMERULE源码解读](https://www.freesion.com/article/3613148138/) |
+| AvailabilityFilteringRule |                                                                                             先过滤出故障的或并发请求大于阈值的服务实例，再以线性轮询的方式从过滤后的实例清单中选出一个                                                                                             |                                                                                                                                                 [RIBBON过滤器AVAILABILITYFILTERINGRULE源码解读](https://www.freesion.com/article/1707151963/)                                                                                                                                                  |
+|     BestAvailableRule     |                                                                                                                           选择一个最小的并发请求的server                                                                                                                           |                                                                                                                                                       [RIBBON源码之BESTAVAILABLERULE解读](https://www.freesion.com/article/4064150697/)                                                                                                                                                        |
+|        RandomRule         |                                                                                                                            随机规则: 随机选择一个server                                                                                                                            |                                                                                                                                                                       随机选择一个数作为index，选择index对应位置的server                                                                                                                                                                       |
+|     ZoneAvoidanceRule     | Ribbon默认规则: 先使用主过滤条件(区域负载器，选择最优区域)对所有实例过滤并返回过滤后的实例清单，依次使用次过滤条件列表中的过滤条件对主过滤条件的结果进行过滤，判断最小过滤数(默认1)和最小过滤百分比(默认0)，最后对满足条件的服务器则使用RoundRobinRule(轮询方式)选择一个服务器实例 |                                                                                                                                                     [RIBBON过滤器ZONEAVOIDANCERULE源码解读](https://www.freesion.com/article/5359151961/)                                                                                                                                                      |
 
 > 使用方式: 除了ZoneAvoidanceRule外， 用以下方式将负载均衡策略注册到spring容器即可。
 
@@ -588,7 +596,7 @@ public class OrderSentinelController {
 
 ![image](https://user-images.githubusercontent.com/37357447/149312642-cb3fb7ee-f212-44dd-87bf-615b9fa5b0a2.png)
 
-+ 资源名：需要限制的请求路径、方法等等
++ 资源名(：需要限制的请求路径、方法等等
 + 针对来源：指定对哪个微服务进行限流，指default，意思是不区分来源，全部限制  
 + 阈值类型/单机阈值：
     + QPS(每秒请求数量)：当调用该接口的QPS达到阈值的时候，进行限流
@@ -1169,8 +1177,326 @@ public class ExceptionHandler {
 
 ## Sentinel 规则持久化
 
-在前文提过, 虽然我们可以直接通过 Sentinel-Dashboard 来为每个 Sentinel 客户端设置各种各样的规则, 但是这些规则默认是存放在内存中，极不稳定, 而且当微服务重启后, 对应的规则就丢失了, 那么有没有一种办法, 让这些规则持久化呢?   
 参考资料:
 
++ [动态规则扩展](https://github.com/alibaba/Sentinel/wiki/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%99%E6%89%A9%E5%B1%95)
 + [生产环境使用 Sentinel](https://github.com/alibaba/Sentinel/wiki/%E5%9C%A8%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E4%B8%AD%E4%BD%BF%E7%94%A8-Sentinel)
 + [动态数据拓展](https://github.com/alibaba/Sentinel/wiki/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%99%E6%89%A9%E5%B1%95)
+
+
+
+在前文提过, 虽然我们可以直接通过 Sentinel-Dashboard 来为每个 Sentinel 客户端设置各种各样的规则, 但是这些规则默认是存放在内存中，极不稳定, 而且当微服务重启后, 对应的规则就丢失了, 那么有没有一种办法, 让这些规则持久化呢?   
+
+Sentinel 的理念是开发者只需要关注资源的定义，当资源定义成功后可以动态增加各种流控降级规则。Sentinel 提供两种方式修改规则：
+
+- 通过 API 直接修改 (`loadRules`)
+- 通过 `DataSource` 适配不同数据源修改
+
+通过 API 直接修改 (`loadRules` 硬编码)一般仅用于测试和演示，生产上一般通过动态规则源的方式(即实现 `DataSource` 接口)来动态管理规则。
+
+alibaba 官方推荐**通过控制台设置规则后将规则推送到统一的规则中心，客户端实现** `ReadableDataSource` **接口端监听规则中心实时获取变更**，流程如下：
+
+![imgag](https://user-images.githubusercontent.com/9434884/45406233-645e8380-b698-11e8-8199-0c917403238f.png)
+
+`DataSource` 扩展常见的实现方式有:
+
+- **拉模式**：客户端主动向某个规则管理中心定期轮询拉取规则，这个规则中心可以是 RDBMS、文件，甚至是 VCS 等。这样做的方式是简单，缺点是无法及时获取变更；
+- **推模式**：规则中心统一推送，客户端通过注册监听器的方式时刻监听变化，比如使用 Nacos、Zookeeper 等配置中心。这种方式有更好的实时性和一致性保证。
+
+### API 模式：使用客户端规则 API 配置规则
+
+[Sentinel Dashboard](https://github.com/alibaba/Sentinel/tree/master/sentinel-dashboard) 通过客户端自带的[规则 API](https://github.com/alibaba/Sentinel/wiki/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8#%E8%A7%84%E5%88%99%E7%9A%84%E7%A7%8D%E7%B1%BB)来实时查询和更改内存中的规则。
+
+注意: 要使客户端具备规则 API，需在客户端引入以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-transport-simple-http</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+### 拉模式：使用文件配置规则
+
+从文件获取规则信息。[`FileRefreshableDataSource`](https://github.com/alibaba/Sentinel/blob/master/sentinel-extension/sentinel-datasource-extension/src/main/java/com/alibaba/csp/sentinel/datasource/FileRefreshableDataSource.java) 会周期性的读取文件以获取规则，当文件有更新时会及时发现，并将规则更新到内存中。使用时只需添加以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-extension</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+示例如下: 
+
+```java
+/**
+ * <p>
+ * This Demo shows how to use {@link FileRefreshableDataSource} to read {@link Rule}s from file. The
+ * {@link FileRefreshableDataSource} will automatically fetches the backend file every 3 seconds, and
+ * inform the listener if the file is updated.
+ * </p>
+ * <p>
+ * Each {@link ReadableDataSource} has a {@link SentinelProperty} to hold the deserialized config data.
+ * {@link PropertyListener} will listen to the {@link SentinelProperty} instead of the datasource.
+ * {@link Converter} is used for telling how to deserialize the data.
+ * </p>
+ * <p>
+ * {@link FlowRuleManager#register2Property(SentinelProperty)},
+ * {@link DegradeRuleManager#register2Property(SentinelProperty)},
+ * {@link SystemRuleManager#register2Property(SentinelProperty)} could be called for listening the
+ * {@link Rule}s change.
+ * </p>
+ * <p>
+ * For other kinds of data source, such as <a href="https://github.com/alibaba/nacos">Nacos</a>,
+ * Zookeeper, Git, or even CSV file, We could implement {@link ReadableDataSource} interface to read these
+ * configs.
+ * </p>
+ *
+ * @author Carpenter Lee
+ * @author Eric Zhao
+ */
+public class FileDataSourceDemo {
+
+    public static void main(String[] args) throws Exception {
+        FileDataSourceDemo demo = new FileDataSourceDemo();
+        demo.listenRules();
+
+        /*
+         * Start to require tokens, rate will be limited by rule in FlowRule.json
+         */
+        FlowQpsRunner runner = new FlowQpsRunner();
+        runner.simulateTraffic();
+        runner.tick();
+    }
+
+    private void listenRules() throws Exception {
+        ClassLoader classLoader = getClass().getClassLoader();
+        String flowRulePath = URLDecoder.decode(classLoader.getResource("FlowRule.json").getFile(), "UTF-8");
+        String degradeRulePath = URLDecoder.decode(classLoader.getResource("DegradeRule.json").getFile(), "UTF-8");
+        String systemRulePath = URLDecoder.decode(classLoader.getResource("SystemRule.json").getFile(), "UTF-8");
+
+        // Data source for FlowRule
+        FileRefreshableDataSource<List<FlowRule>> flowRuleDataSource = new FileRefreshableDataSource<>(
+            flowRulePath, flowRuleListParser);
+        FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+
+        // Data source for DegradeRule
+        FileRefreshableDataSource<List<DegradeRule>> degradeRuleDataSource
+            = new FileRefreshableDataSource<>(
+            degradeRulePath, degradeRuleListParser);
+        DegradeRuleManager.register2Property(degradeRuleDataSource.getProperty());
+
+        // Data source for SystemRule
+        FileRefreshableDataSource<List<SystemRule>> systemRuleDataSource
+            = new FileRefreshableDataSource<>(
+            systemRulePath, systemRuleListParser);
+        SystemRuleManager.register2Property(systemRuleDataSource.getProperty());
+    }
+
+    private Converter<String, List<FlowRule>> flowRuleListParser = source -> JSON.parseObject(source,
+        new TypeReference<List<FlowRule>>() {});
+    private Converter<String, List<DegradeRule>> degradeRuleListParser = source -> JSON.parseObject(source,
+        new TypeReference<List<DegradeRule>>() {});
+    private Converter<String, List<SystemRule>> systemRuleListParser = source -> JSON.parseObject(source,
+        new TypeReference<List<SystemRule>>() {});
+}
+```
+
+### 推模式
+
+#### 推模式：使用 Nacos 配置规则
+
+Nacos 是阿里中间件团队开源的服务发现和动态配置中心。Sentinel 针对 Nacos 作了适配，底层可以采用 Nacos 作为规则配置数据源。使用时只需添加以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+然后创建 `NacosDataSource` 并将其注册至对应的 RuleManager 上即可。比如：
+
+```java
+// remoteAddress 代表 Nacos 服务端的地址
+// groupId 和 dataId 对应 Nacos 中相应配置
+ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new NacosDataSource<>(remoteAddress, groupId, dataId,
+    source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
+FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+```
+
+注意：如果希望初始化 Nacos 数据源时携带更多的配置（如鉴权配置），可通过带 Properties 的构造函数进行传入。
+
+详细示例可以参见 [sentinel-demo-nacos-datasource](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-nacos-datasource)。
+
+#### 推模式：使用 ZooKeeper 配置规则
+
+Sentinel 针对 ZooKeeper 作了相应适配，底层可以采用 ZooKeeper 作为规则配置数据源。使用时只需添加以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-zookeeper</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+然后创建 `ZookeeperDataSource` 并将其注册至对应的 RuleManager 上即可。比如：
+
+```java
+// remoteAddress 代表 ZooKeeper 服务端的地址
+// path 对应 ZK 中的数据路径
+ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new ZookeeperDataSource<>(remoteAddress, path, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
+FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+```
+
+详细示例可以参见 [sentinel-demo-zookeeper-datasource](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-zookeeper-datasource)。
+
+#### 推模式：使用 Apollo 配置规则
+
+Sentinel 针对 [Apollo](https://github.com/ctripcorp/apollo) 作了相应适配，底层可以采用 Apollo 作为规则配置数据源。使用时只需添加以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-apollo</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+然后创建 `ApolloDataSource` 并将其注册至对应的 RuleManager 上即可。比如：
+
+```java
+// namespaceName 对应 Apollo 的命名空间名称
+// ruleKey 对应规则存储的 key
+// defaultRules 对应连接不上 Apollo 时的默认规则
+ReadableDataSource<String, List<FlowRule>> flowRuleDataSource = new ApolloDataSource<>(namespaceName, ruleKey, defaultRules, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {}));
+FlowRuleManager.register2Property(flowRuleDataSource.getProperty());
+```
+
+详细示例可以参见 [sentinel-demo-apollo-datasource](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-apollo-datasource)。
+
+#### 推模式：使用 Redis 配置规则
+
+Sentinel 针对 Redis 作了相应适配，底层可以采用 Redis 作为规则配置数据源。使用时只需添加以下依赖：
+
+```xml
+<!-- 仅支持 JDK 1.8+ -->
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-redis</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+Redis 动态配置源采用 Redis PUB-SUB 机制实现，详细文档参考：https://github.com/alibaba/Sentinel/tree/master/sentinel-extension/sentinel-datasource-redis
+
+### 规则持久化实战(以 Nacos 为例)
+
+[Sentinel使用Nacos存储规则](https://developer.aliyun.com/article/698565)
+
+Nacos 是阿里中间件团队开源的服务发现和动态配置中心。Sentinel 针对 Nacos 作了适配，底层可以采用 Nacos 作为规则配置数据源。
+
+1. 服务调用方 shop-order 添加以下依赖：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+    <version>1.8.4</version>
+</dependency>
+```
+
+2. 服务调用方 shop-order application.yml 改为如下, 从 nacos 读取配置文件
+
+``` java
+    sentinel:
+      transport:
+        port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+        dashboard: 127.0.0.1:8858 # 指定控制台服务的地址
+      web-context-unify: false # 关闭context整合
+      datasource: 
+        ds: 
+          nacos:
+            server-addr: 127.0.0.1:8848
+            # nacos中存储规则的groupId
+            dataId: test-sentinel
+            # nacos中存储规则的dataId
+            groupId: DEFAULT_GROUP
+            # 定义存储的规则类型，取值见：org.springframework.cloud.alibaba.sentinel.datasource.RuleType
+            # 限流: FLOW, 熔断降级: DEGRADE, 系统规则: SYSTEM, 授权规则: AUTHORITY, 热点规则: PARAM_FLOW
+            ruleType: AUTHORITY
+```
+
+3. 登录 nacos -> configurationManagement -> Configuration -> + add new Rule, 参数可参考 [规则 API](https://github.com/alibaba/Sentinel/wiki/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8#%E8%A7%84%E5%88%99%E7%9A%84%E7%A7%8D%E7%B1%BB)
+
+     + 流量控制规则 (FlowRule)
+
+       | Field           | 说明                                                         | 默认值                                          |
+     | --------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+       | resource        | 资源名，资源名是限流规则的作用对象                           |                                                 |
+       | count           | 限流阈值                                                     |                                                 |
+       | grade           | 限流阈值类型，QPS 模式（1）或并发线程数模式（0）             | QPS 模式, RuleConstant.FLOW_GRADE_QPS           |
+       | limitApp        | 流控针对的调用来源                                           | `default`，代表不区分调用来源                   |
+       | strategy        | 调用关系限流策略：直接、链路、关联                           | 根据资源本身（直接）RuleConstant.STRATEGY_CHAIN |
+       | controlBehavior | 流控效果（直接拒绝/WarmUp/匀速+排队等待），不支持按调用关系限流 | 直接拒绝RuleConstant.CONTROL_BEHAVIOR_DEFAULT   |
+       | clusterMode     | 是否集群限流                                                 | 否                                              |
+       
+     + 熔断降级规则 (DegradeRule)
+
+     | Field              | 说明                                                         | 默认值                                  |
+     | ------------------ | ------------------------------------------------------------ | --------------------------------------- |
+     | resource           | 资源名，即规则的作用对象                                     |                                         |
+     | grade              | 熔断策略，支持慢调用比例/异常比例/异常数策略                 | 慢调用比例RuleConstant.DEGRADE_GRADE_RT |
+     | count              | 慢调用比例模式下为慢调用临界 RT（超出该值计为慢调用）；异常比例/异常数模式下为对应的阈值 |                                         |
+     | timeWindow         | 熔断时长，单位为 s                                           |                                         |
+     | minRequestAmount   | 熔断触发的最小请求数，请求数小于该值时即使异常比率超出阈值也不会熔断（1.7.0 引入） | 5                                       |
+     | statIntervalMs     | 统计时长（单位为 ms），如 60*1000 代表分钟级（1.8.0 引入）   | 1000 ms                                 |
+     | slowRatioThreshold | 慢调用比例阈值，仅慢调用比例模式有效（1.8.0 引入）           |                                         |
+     
+   + 热点参数规则
+   
+     | 属性              | 说明                                                         | 默认值   |
+     | ----------------- | ------------------------------------------------------------ | -------- |
+     | resource          | 资源名，必填                                                 |          |
+     | count             | 限流阈值，必填                                               |          |
+     | grade             | 限流模式                                                     | QPS 模式 |
+     | durationInSec     | 统计窗口时间长度（单位为秒），1.6.0 版本开始支持             | 1s       |
+     | controlBehavior   | 流控效果（支持快速失败和匀速排队模式），1.6.0 版本开始支持   | 快速失败 |
+     | maxQueueingTimeMs | 最大排队等待时长（仅在匀速排队模式生效），1.6.0 版本开始支持 | 0ms      |
+     | paramIdx          | 热点参数的索引，必填，对应 `SphU.entry(xxx, args)` 中的参数索引位置 |          |
+     | paramFlowItemList | 参数例外项，可以针对指定的参数值单独设置限流阈值，不受前面 `count` 阈值的限制。**仅支持基本类型和字符串类型** |          |
+     | clusterMode       | 是否是集群参数流控规则                                       | `false`  |
+     | clusterConfig     | 集群流控相关配置                                             |          |
+     
+   + 系统保护规则 (SystemRule)
+   
+     | Field             | 说明                                   | 默认值      |
+     | ----------------- | -------------------------------------- | ----------- |
+     | highestSystemLoad | `load1` 触发值，用于触发自适应控制阶段 | -1 (不生效) |
+     | avgRt             | 所有入口流量的平均响应时间             | -1 (不生效) |
+     | maxThread         | 入口流量的最大并发数                   | -1 (不生效) |
+     | qps               | 所有入口资源的 QPS                     | -1 (不生效) |
+     | highestCpuUsage   | 当前系统的 CPU 使用率（0.0-1.0）       | -1 (不生效) |
+
+   + 访问控制规则 (AuthorityRule)
+   
+     - `resource`：资源名，即规则的作用对象
+   
+     - `limitApp`：对应的黑名单/白名单，不同 origin 用 `,` 分隔，如 `appA,appB`
+   
+     - `strategy`：限制模式，Mode: 0 for whitelist; 1 for blacklist.
+
+示例如下图
+
+<img width="1265" alt="Screen Shot 2022-12-30 at 18 38 11" src="https://user-images.githubusercontent.com/37357447/210061311-686dc2aa-7964-48ea-8cc8-f0fb335df1f9.png">
+
+启动项目, sentinel 从 nacos 中拉取规则如图
+
+<img width="1275" alt="Screen Shot 2022-12-30 at 18 39 54" src="https://user-images.githubusercontent.com/37357447/210061413-fa969fdf-c150-44ee-8af4-525337db586d.png">
+
+当然也可以按照[官方文档](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-nacos-datasource/src/main/java/com/alibaba/csp/sentinel/demo/datasource/nacos)所示, 使用硬编码的形式, 进行 Sentinel 规则持久化

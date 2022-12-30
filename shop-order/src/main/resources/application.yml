@@ -12,3 +12,14 @@ spring:
         port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
         dashboard: 127.0.0.1:8858 # 指定控制台服务的地址
       web-context-unify: false # 关闭context整合
+      datasource: 
+        ds: 
+          nacos:
+            server-addr: 127.0.0.1:8848
+            # nacos中存储规则的groupId
+            dataId: test-sentinel
+            # nacos中存储规则的dataId
+            groupId: DEFAULT_GROUP
+            # 定义存储的规则类型，取值见：org.springframework.cloud.alibaba.sentinel.datasource.RuleType
+            # 限流: FLOW, 熔断降级: DEGRADE, 系统规则: SYSTEM, 授权规则: AUTHORITY, 热点规则: PARAM_FLOW
+            ruleType: AUTHORITY
