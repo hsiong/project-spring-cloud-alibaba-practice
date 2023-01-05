@@ -2,63 +2,66 @@
 - [解决问题](#解决问题)
 - [技术选型](#技术选型)
 - [服务治理与负载均衡](#服务治理与负载均衡)
-    - [预备工作](#预备工作)
-    - [用 RestTemplate 改造](#用-resttemplate-改造)
-    - [引入服务治理](#引入服务治理)
-        - [服务注册中心](#服务注册中心)
-            - [服务发现](#服务发现)
-            - [服务配置：](#服务配置)
-            - [服务健康检测](#服务健康检测)
-        - [常见的注册中心](#常见的注册中心)
-        - [使用 Nacos](#使用-nacos)
-            - [使用 docker 搭建 Nacos 环境](#使用-docker-搭建-nacos-环境)
-            - [项目集成 Nacos](#项目集成-nacos)
-    - [实现服务调用中的负载均衡](#实现服务调用中的负载均衡)
-        - [什么是负载均衡](#什么是负载均衡)
-        - [自定义实现负载均衡](#自定义实现负载均衡)
-        - [基于Ribbon实现负载均衡](#基于ribbon实现负载均衡)
-            - [Ribbon支持的负载均衡策略](#ribbon支持的负载均衡策略)
-    - [基于 Feign 实现服务调用](#基于-feign-实现服务调用)
+  - [预备工作](#预备工作)
+  - [用 RestTemplate 改造](#用-resttemplate-改造)
+  - [引入服务治理](#引入服务治理)
+    - [服务注册中心](#服务注册中心)
+      - [服务发现](#服务发现)
+      - [服务配置：](#服务配置)
+      - [服务健康检测](#服务健康检测)
+    - [常见的注册中心](#常见的注册中心)
+    - [使用 Nacos](#使用-nacos)
+      - [使用 docker 搭建 Nacos 环境](#使用-docker-搭建-nacos-环境)
+      - [项目集成 Nacos](#项目集成-nacos)
+  - [实现服务调用中的负载均衡](#实现服务调用中的负载均衡)
+    - [什么是负载均衡](#什么是负载均衡)
+    - [自定义实现负载均衡](#自定义实现负载均衡)
+    - [基于Ribbon实现负载均衡](#基于ribbon实现负载均衡)
+      - [Ribbon支持的负载均衡策略](#ribbon支持的负载均衡策略)
+  - [基于 Feign 实现服务调用](#基于-feign-实现服务调用)
 - [服务容错](#服务容错)
-    - [高并发的问题](#高并发的问题)
-    - [服务雪崩](#服务雪崩)
-    - [服务容错方案](#服务容错方案)
-        - [常见的容错思路](#常见的容错思路)
-        - [常见的容错组件](#常见的容错组件)
-    - [Sentinal 简介](#sentinal-简介)
-        - [Sentinal 基本概念](#sentinal-基本概念)
-        - [Sentinal 重要功能](#sentinal-重要功能)
-    - [Sentinel 流控规则](#sentinel-流控规则)
-        - [流控模式实战](#流控模式实战)
-        - [@SentinelResource 注解实战](#sentinelresource-注解实战)
-        - [流控模式-直接](#流控模式-直接)
-        - [流控模式-关联](#流控模式-关联)
-        - [流控模式-链路](#流控模式-链路)
-    - [Sentinel 降级规则](#sentinel-降级规则)
-        - [慢调用比例](#慢调用比例)
-        - [异常比例](#异常比例)
-        - [异常数](#异常数)
-    - [Sentinel 热点规则](#sentinel-热点规则)
-        - [热点规则基础](#热点规则基础)
-        - [热点规则高级规则](#热点规则高级规则)
-    - [Sentinel 授权规则](#sentinel-授权规则)
-    - [Sentinel 系统规则](#sentinel-系统规则)
-        - [背景](#背景)
-        - [系统规则概述](#系统规则概述)
-        - [系统规则原理](#系统规则原理)
-        - [系统规则实战](#系统规则实战)
-    - [Sentinel 自定义异常](#sentinel-自定义异常)
-        - [背景](#背景-1)
-        - [实战](#实战)
-    - [Sentinel 规则持久化](#sentinel-规则持久化)
-        - [API 模式：使用客户端规则 API 配置规则](#api-模式使用客户端规则-api-配置规则)
-        - [拉模式：使用文件配置规则](#拉模式使用文件配置规则)
-        - [推模式](#推模式)
-            - [推模式：使用 Nacos 配置规则](#推模式使用-nacos-配置规则)
-            - [推模式：使用 ZooKeeper 配置规则](#推模式使用-zookeeper-配置规则)
-            - [推模式：使用 Apollo 配置规则](#推模式使用-apollo-配置规则)
-            - [推模式：使用 Redis 配置规则](#推模式使用-redis-配置规则)
-        - [规则持久化实战(以 Nacos 为例)](#规则持久化实战以-nacos-为例)
+  - [高并发的问题](#高并发的问题)
+  - [服务雪崩](#服务雪崩)
+  - [服务容错方案](#服务容错方案)
+    - [常见的容错思路](#常见的容错思路)
+    - [常见的容错组件](#常见的容错组件)
+  - [Sentinal 简介](#sentinal-简介)
+    - [Sentinal 基本概念](#sentinal-基本概念)
+    - [Sentinal 重要功能](#sentinal-重要功能)
+  - [Sentinel 流控规则](#sentinel-流控规则)
+    - [流控模式实战](#流控模式实战)
+    - [@SentinelResource 注解实战](#sentinelresource-注解实战)
+    - [流控模式-直接](#流控模式-直接)
+    - [流控模式-关联](#流控模式-关联)
+    - [流控模式-链路](#流控模式-链路)
+  - [Sentinel 降级规则](#sentinel-降级规则)
+    - [慢调用比例](#慢调用比例)
+    - [异常比例](#异常比例)
+    - [异常数](#异常数)
+  - [Sentinel 热点规则](#sentinel-热点规则)
+    - [热点规则基础](#热点规则基础)
+    - [热点规则高级规则](#热点规则高级规则)
+  - [Sentinel 授权规则](#sentinel-授权规则)
+  - [Sentinel 系统规则](#sentinel-系统规则)
+    - [背景](#背景)
+    - [系统规则概述](#系统规则概述)
+    - [系统规则原理](#系统规则原理)
+    - [系统规则实战](#系统规则实战)
+  - [Sentinel 自定义异常](#sentinel-自定义异常)
+    - [背景](#背景-1)
+    - [实战](#实战)
+  - [Sentinel 规则持久化](#sentinel-规则持久化)
+    - [API 模式：使用客户端规则 API 配置规则](#api-模式使用客户端规则-api-配置规则)
+    - [拉模式：使用文件配置规则](#拉模式使用文件配置规则)
+    - [推模式](#推模式)
+      - [推模式：使用 Nacos 配置规则](#推模式使用-nacos-配置规则)
+      - [推模式：使用 ZooKeeper 配置规则](#推模式使用-zookeeper-配置规则)
+      - [推模式：使用 Apollo 配置规则](#推模式使用-apollo-配置规则)
+      - [推模式：使用 Redis 配置规则](#推模式使用-redis-配置规则)
+    - [规则持久化实战(以 Nacos 为例)](#规则持久化实战以-nacos-为例)
+  - [Sentinel整合Feign](#sentinel整合feign)
+    - [使用 Fallback 实现](#使用-fallback-实现)
+    - [使用 FallbackFactory 实现](#使用-fallbackfactory-实现)
 
 
 # 序言
@@ -1504,3 +1507,140 @@ Nacos 是阿里中间件团队开源的服务发现和动态配置中心。Senti
 <img width="1275" alt="Screen Shot 2022-12-30 at 18 39 54" src="https://user-images.githubusercontent.com/37357447/210061413-fa969fdf-c150-44ee-8af4-525337db586d.png">
 
 当然也可以按照[官方文档](https://github.com/alibaba/Sentinel/tree/master/sentinel-demo/sentinel-demo-nacos-datasource/src/main/java/com/alibaba/csp/sentinel/demo/datasource/nacos)所示, 使用硬编码的形式, 进行 Sentinel 规则持久化
+
+## Sentinel整合Feign
+
+当项目中使用了 `OpenFeign` 后，可以很方便的进行远程服务调用，现在有个问题，假如远程服务出现故障了，调不了远程的接口，这边又着急等着返回结果，怎么办呢？
+
+当然是使用 **服务降级** ，本篇就使用 `OpenFeign` 进行远程调用，并结合 `Sentinel` 对出现的异常、故障等问题进行服务降级。
+
+### 使用 Fallback 实现
+
+1. 调用方 `shop-order`  application.yml 添加配置
+
+```java
+feign: 
+  sentinel:
+    enabled: true
+```
+
+2. 创建容错类
+
+``` java
+@Component
+public class ProductServiceFallBack implements ProductService {
+
+    @Override
+    public String product(String pid) {
+        throw new IllegalArgumentException("服务容错");
+    }
+
+}
+```
+
+3. 为被容器的接口指定容错类, 当远程服务都出现异常时, 调用本类
+
+```java
+//value用于指定调用nacos下哪个微服务
+//fallback用于指定容错类
+@FeignClient(value = "shop-product", fallback = ProductServiceFallBack.class) // 声明服务提供者的name
+public interface ProductService {
+
+    @GetMapping(value = "/product/{pid}")
+    String product(@PathVariable("pid") String pid);
+
+}
+```
+
+4. 只启动 `shop-order`, 调用 http://localhost:8091/order/prod/1234, 进入容错
+
+> 异常Handler dispatch failed; nested exception is java.lang.AssertionError: java.lang.IllegalArgumentException: 服务容错
+
+### 使用 FallbackFactory 实现
+
+参考资料: https://arnoldgalovics.com/feign-fallback/
+
+>What’s the difference between this and the regular fallback?
+>
+>With the regular fallback, you can’t access the underlying exception that triggered the fallback however with the fallback factory, you can.
+
+1. Create a new Feign service as follows
+
+```java
+@FeignClient(value = "shop-product")
+public interface ProductTestService {
+
+    @GetMapping(value = "/product/{pid}")
+    String product(@PathVariable("pid") String pid);
+
+}
+```
+
+2. We need to implement the `FallbackFactory<T>` interface where T represents the type of the Feign client, in this case `ProductTestService`.
+
+```java
+@Component
+public class ProductTestFallbackFactory implements FallbackFactory<ProductTestService> {
+
+    @Override
+    public ProductTestService create(Throwable cause) {
+        return new ProductTestService() {
+            @Override
+            public String product(String pid) {
+                if (cause instanceof InvalidObjectException) {
+                    return "Bad Request!!!";
+                }
+                if (cause instanceof FileNotFoundException) {
+                    return "Not Found!!!";
+                }
+                 throw new IllegalArgumentException(cause);
+            }
+        };
+    }
+
+}
+```
+
+3. Add `ProductTestFallbackFactory` as fallbackFactory to ProductTestService, shown as follows
+
+```java
+@FeignClient(value = "shop-producttttt", fallbackFactory = ProductTestFallbackFactory.class)
+public interface ProductTestService {
+
+    @GetMapping(value = "/product/{pid}")
+    String product(@PathVariable("pid") String pid);
+
+}
+```
+
+> Warning: use feign.hystrix.FallbackFactory, otherwise the terminal would throw `"is not assignable to interface feign.hystrix.FallbackFactory"` exception.
+
+3. Create a new Controller as follows
+
+```java
+@RestController
+@Slf4j
+public class OrderFallbackController {
+
+    @Autowired
+    private ProductTestService productService;
+
+    @GetMapping("/order/prodTest/{pid}")
+    public String order(@PathVariable("pid") String pid) {
+
+        // feign fallback factory
+        String product = productService.product(pid);
+        log.info("product info:" + JSON.toJSONString(product));
+        return product;
+        
+    }
+    
+}
+```
+
+3. start consumer service `shop-order`, and access http://localhost:8091/order/prodTest/1234. The browser would show the result as below
+
+<img width="823" alt="Screen Shot 2023-01-05 at 11 27 29" src="https://user-images.githubusercontent.com/37357447/210695330-06d9e713-931e-4a26-821c-56d654ab25e2.png">
+
+
+

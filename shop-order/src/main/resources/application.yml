@@ -23,3 +23,7 @@ spring:
             # 定义存储的规则类型，取值见：org.springframework.cloud.alibaba.sentinel.datasource.RuleType
             # 限流: FLOW, 熔断降级: DEGRADE, 系统规则: SYSTEM, 授权规则: AUTHORITY, 热点规则: PARAM_FLOW
             ruleType: AUTHORITY
+            
+feign: 
+  sentinel:
+    enabled: true
