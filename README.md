@@ -294,7 +294,7 @@ public RestTemplate restTemplate() {
     String product = restTemplate.getForObject("http://" + url + "/product/" + pid，String.class);
 ```
 
-#### Ribbon支持的负载均衡策略
+#### Ribbon的负载均衡策略
 
 Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为com.netflix.Loadbalancer.IRule，具体的负载策略如下图所示:
 
@@ -321,7 +321,7 @@ Ribbon内置了多种负载均衡策略，内部负载均衡的顶级接口为co
 public IRule myRule(){
     // 选择一个最小的并发请求的server
     return new BestAvailableRule();
-    }
+}
 ```
 
 ## 基于 Feign 实现服务调用
@@ -530,18 +530,18 @@ docker run --name sentinel -p 8858:8858 -d royalwang/sentinel-dashboard
 
 > application.yml
 
-```java
+```yaml
 spring:
     application:
     name: shop-order
     cloud:
-    nacos:
-    discovery:
-    server-addr: 127.0.0.1:8848
-    sentinel:
-    transport:
-    port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
-    dashboard: Sentinal-ip:Sentinal-port # 指定控制台服务的地址
+      nacos:
+        discovery:
+          server-addr: 127.0.0.1:8848
+      sentinel:
+        transport:
+          port: 8061 #跟控制台交流的端口 ,随意指定一个未使用的端口即可
+          dashboard: Sentinal-ip:Sentinal-port # 指定控制台服务的地址
 ```
 
 3. 在需要流控的服务调用方 shop-order, 新增OrderSentinelController
@@ -720,8 +720,8 @@ public class OrderSentinelController {
 
 > 备注：
 >
-> + [Jmeter性能测试NoHttpResponseException (the target server failed to respond)](https://blog.csdn.net/just_lion/article/details/46923775)
-> + [Jmeter不能保存文件处理办法](https://blog.csdn.net/TestGiao/article/details/119530351)
+> + [Jmeter性能测试 NoHttpResponseException (the target server failed to respond)](https://blog.csdn.net/just_lion/article/details/46923775)
+> + [Jmeter 不能保存文件处理办法](https://blog.csdn.net/TestGiao/article/details/119530351)
 
 ### @SentinelResource 注解实战
 
@@ -836,10 +836,10 @@ spring:
 public String slowRequestRadio() throws InterruptedException {
     double random = Math.random();
     if (random > 0.5) {
-    Thread.sleep(2000);
+    	Thread.sleep(2000);
     }
     return "slowRequestRadio";
-    }
+}
 
 /**
  * 异常比例测试
@@ -849,10 +849,10 @@ public String slowRequestRadio() throws InterruptedException {
 public String errorRadio() {
     double random = Math.random();
     if (random > 0.5) {
-    throw new IllegalArgumentException("error");
+    	throw new IllegalArgumentException("error");
     }
     return "errorRadio";
-    }
+}
 
 /**
  * 异常数测试
@@ -862,10 +862,10 @@ public String errorRadio() {
 public String errorCount() {
     double random = Math.random();
     if (random > 0.5) {
-    throw new IllegalArgumentException("error");
+    	throw new IllegalArgumentException("error");
     }
     return "errorCount";
-    }
+}
 ```
 
 ### 慢调用比例
@@ -877,8 +877,8 @@ public String errorCount() {
 经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN 状态），若接下来的一个请求响应时间小于设置的慢调用 RT 则结束熔断，若大于设置的慢调用 RT 则会再次被熔断。
 
 + 最大RT（即最大的响应时间）: 最大请求响应时间(单位:ms)
-+ 比例阈值: 慢调用统计数对于最小请求数的占有比例
 + 熔断时长: 超过时间后会尝试恢复
++ 比例阈值: 慢调用统计数对于最小请求数的占有比例
 + 最小请求数: 触发熔断的最小请求数目，若当前统计窗口内的请求数小于此值，即使达到了熔断条件也不会触发
 + 统计时长（statIntervalMs）: 监控的一个时间段
 
@@ -892,7 +892,7 @@ public String errorCount() {
 
 当单位统计时长（statIntervalMs）内请求数目大于设置的最小请求数目，并且异常的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。经过熔断时长后熔断器会进入探测恢复状态（HALF-OPEN 状态），若接下来的一个请求成功完成（没有错误）则结束熔断，否则会再次被熔断。
 
-+ `异常比例的阈值范围是 [0.0, 1.0]，代表 0% - 100%。``
++ 异常比例的阈值范围是 [0.0, 1.0]，代表 0% - 100%。
 
 1. 配置降级规如下, 操作和结果与[慢调用比例](#慢调用比例)类似, 不再累述
    ![image](https://user-images.githubusercontent.com/37357447/149705730-417036f4-4032-435d-8f17-805844c66202.png)
@@ -930,11 +930,11 @@ public String errorCount() {
 public String paramBlock(@RequestParam(name = "param", required = false) String param,
 @RequestParam(name = "index", required = false) Integer index) {
     return "paramBlock";
-    }
+}
 
 public String paramBlockHandler(String param, Integer index, BlockException ex) {
     throw new IllegalArgumentException();
-    }
+}
 ```
 
 2. 配置如图, 我们在这里设置对 param 参数进行限流控制
@@ -957,11 +957,12 @@ public String paramBlockHandler(String param, Integer index, BlockException ex) 
 ### 热点规则高级规则
 
 上面讲了热点key的参数限流，第一个参数当QPS超过1秒1次点击后马上被限流，这是普通的案例超过1秒钟一个后，达到阈值1后马上被限流，但是也有参数例外的情况。  
+
 当我们期望第一个参数当它是某个特殊值时，它的限流值和平时不一样，假如当p1的值等于5时，它的阈值可以达到200，这种参数例外的情况，我们就使用到了热点配置的高级属性。
 
 1. 配置如图
     + 参数值: 当参数的值为该值时, 进行限流
-    + 注意: 此处的参数类型只能为基本类型和String类型。
+    + 参数类型: 此处的参数类型只能为基本类型和String类型。
 
 
 ![image](https://user-images.githubusercontent.com/37357447/149736479-e28b2f4e-0d07-4d82-9218-75decc707db3.png)
@@ -979,7 +980,7 @@ public String paramBlockHandler(String param, Integer index, BlockException ex) 
     + 若配置白名单，则只有请求来源位于白名单内时才可通过
     + 若配置黑名单，则请求来源位于黑名单时不通过，其余的请求通过
 
-1. 新增`RequestOriginParserDefinition`用于定义授权应用名
+1. 新增`RequestOriginParserDefinition`用于获取授权应用名的参数
 
 ```java
 @Component
@@ -1021,7 +1022,13 @@ public class RequestOriginParserDefinition implements RequestOriginParser {
 
 ​	想象一下这样的一个真实场景: 出现了这样一个问题，下游应用不可靠，导致应用 RT 很高，从而 Load 到了一个很高的点。过了一段时间之后下游应用恢复了，应用 RT 也相应减少。这个时候，其实应该大幅度增大流量的通过率；但是由于这个时候 Load 仍然很高，通过率的恢复仍然不高。
 
-TCP BBR 的思想给了我们一个很大的启发。我们`应该根据系统能够处理的请求，和允许进来的请求，来做平衡`，而不是根据一个间接的指标（系统 Load）来做限流。 最终我们追求的目标是: 在系统不被拖垮的情况下，提高系统的吞吐率，而不是 Load 一定要到低于某个阈值。如果我们还是按照固有的思维，超过特定的 Load 就禁止流量进入，系统 Load 恢复就放开流量，这样做的结果是无论我们怎么调参数，调比例，都是按照果来调节因，都无法取得良好的效果。
+
+
+TCP BBR 的思想给了我们一个很大的启发。我们`应该根据系统能够处理的请求，和允许进来的请求，来做平衡`，而不是根据一个间接的指标（系统 Load）来做限流。 
+
+
+
+最终我们追求的目标是: 在系统不被拖垮的情况下，提高系统的吞吐率，而不是 Load 一定要到低于某个阈值。如果我们还是按照固有的思维，超过特定的 Load 就禁止流量进入，系统 Load 恢复就放开流量，这样做的结果是无论我们怎么调参数，调比例，都是按照果来调节因，都无法取得良好的效果。
 
 
 
@@ -1031,7 +1038,7 @@ Sentinel 在系统自适应保护的做法是，用 `Load` 作为启动自适应
 
 系统保护规则是从应用级别的入口流量进行控制，从单台机器的`总体Load`、`RT`、`入口QPS`、`CPU使用率`和`线程数`五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。
 
-+ Load(仅对 Linux/Unix-like 机器生效)：当系统Load1超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。
++ Load(仅对 Linux/Unix-like 机器生效)：当系统Load超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。
   系统容量由系统的 maxQps * minRt 计算得出。设定参考值一般是CPU cores * 2.5。
 + 平均RT：当单台机器上所有入口流量的平均RT达到阈值即触发系统保护，单位是毫秒。
 + 线程数：当单台机器上所有入口流量的并发线程数达到阈值即触发系统保护。

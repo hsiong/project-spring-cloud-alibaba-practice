@@ -1699,3 +1699,24 @@ public class FileDataSourceInit implements InitFunc {
 4. 使用 Redis 配置规则
 
 ### 4.8.3 推模式拓展实战
+
+
+
+# 其他笔记
+
++ 获取 server 的实际地址
+```java
+
+    @Resource
+    private DiscoveryClient discoveryClient;
+
+    public void fun() {
+        List<ServiceInstance> instances = discoveryClient.getInstances("service-oss");
+        if (instances.size() == 0) {
+            throw new EscherException("未找到 oss 服务");
+        }
+        String url = instances.get(0).getUri().toString() + "/oss/fileUpload";
+
+        }
+
+```
